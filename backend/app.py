@@ -1,9 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
+import controllers
 
 app = Flask(__name__)
 CORS(app)
+"""
+App.py only handles handle HTTP logic, aligns with Single Responsibiltiy Principle
+"""
 
 # Fetch user preferences from the database
 @app.route('/preferences', methods=['GET'])
@@ -32,6 +36,29 @@ def add_preference():
     conn.close()
 
     return jsonify({"message": "Preference added successfully!"})
+
+# Route to get and display map information
+@app.route('/map', methods=['GET'])
+def get_locations():
+    # Get data sent in request
+    filter_param = request.args.get('filter', default=None)
+
+    # Create a new Map instance for each request (stateless approach)
+    map_instance = controllers.Map(filter_param)
+
+    # Get and return the locations data
+    map_data = map_instance.display_locations()
+
+    # Return mapbox compatible GeoJSON to plot overlay on map
+    return jsonify(map_data)
+
+# Route to get and display location information on search
+@app.route('/search', methods=['GET'])
+def get_locations():
+    
+    return jsonify(controllers.Locations.get_locations())
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
