@@ -1,4 +1,5 @@
 import api
+import api.fetch_crimes
 
 class Locations:
     def __init__(self):
@@ -15,7 +16,8 @@ class Locations:
         """
         Return: List of all locations ranked by crime rate
         """
-        
+
+
         pass
 
     def sortBySchools():
@@ -37,6 +39,7 @@ class LocationsDetailController:
         Composition relationship for PricePlotter
         """
         self.price = None
+        self.crime = None
         self.crime_rate = None
         self.schools = None
         self.malls = None
@@ -46,7 +49,6 @@ class LocationsDetailController:
     def get_location_details(self, location_name: str) -> dict:
         """
         Args: Unique Location Name
-
         Return: Dict containing location details
         
         """
@@ -58,7 +60,8 @@ class LocationsDetailController:
         # Get Price Trend Graph
         self.price = PricePlotterClass.plot_price_trend(past_resale_prices)
 
-        # Get crime_rate from LocationDetails table
+        # Get crimes and crime_rate from LocationDetails table
+        self.crime_rate = api.fetch_crimes.fetch_all_crimes_by_location(location=location_name)
 
         # Get schools from LocationDetails table
 
