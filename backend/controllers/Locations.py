@@ -1,10 +1,12 @@
 import api
-import api.fetch_crimes
+import Preferences, Scoring
 
-class Locations:
+
+class LocationsController:
     def __init__(self):
         pass
 
+    @staticmethod
     def get_locations():
         pass
 
@@ -26,7 +28,24 @@ class Locations:
     def sortByMalls():
         pass
 
-    def sortByScore():
+    def sortByScore(user_id):
+        """
+        Get top 5 locations, their score and summarised details
+        """
+        all_locations = LocationsController.get_locations()
+        importance_rank = Preferences.PreferenceContoller.get_user_preference(user_id=user_id)
+        ranked_locations_by_category = Scoring.ScoringController.assign_score_to_all_locations(all_locations, category='score', importance_rank=importance_rank)
+
+        pass
+
+    def summarised_details(location: str, sort_by='price'):
+        """
+        Get the summarised details of the location.
+        Sumarised details include: 
+        1. Category Rank
+        2. Category score, i.e. if Price score
+        3. Average price of housing
+        """
         pass
 
 

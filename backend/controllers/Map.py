@@ -9,7 +9,7 @@ class Map:
 
             # Swtich infomation on overlay, should be the same overlay for all cases, just adjusted based on cat
             case 'crime':
-                Locations.sort_by_crime()
+                Locations.LocationsController.sort_by_crime()
                 pass
 
             case 'schools':

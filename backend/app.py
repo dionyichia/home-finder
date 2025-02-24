@@ -56,7 +56,7 @@ def get_locations():
 @app.route('/search', methods=['GET'])
 def get_locations():
     
-    return jsonify(controllers.Locations.get_locations())
+    return jsonify(controllers.LocationsController.get_locations())
 
 
 
