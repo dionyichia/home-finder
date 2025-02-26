@@ -52,11 +52,11 @@ def get_locations():
     # Return mapbox compatible GeoJSON to plot overlay on map
     return jsonify(map_data)
 
-# Route to get and display location information on search
+# Route to get location information to display on search, view and explore
 @app.route('/search', methods=['GET'])
 def get_locations():
     
-    return jsonify(controllers.LocationsController.get_locations())
+    return jsonify(controllers.LocationsDetailController.get_location_details())
 
 
 

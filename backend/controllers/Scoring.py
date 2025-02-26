@@ -24,7 +24,7 @@ class ScoringController:
         Chosen category assumes rank 1, followed by rest in the same order as above. 
         """
 
-        scored_and_ranked_locations = []
+        scored_and_ranked_locations = {}
 
         # Alter list of importance rank, make the categroy rank 1
         if category != 'score':
