@@ -1,7 +1,6 @@
 import api
-import Preferences, Scoring
-import api.fetch_crimes
-
+import Preferences
+import Scoring
 
 class LocationsController:
     def __init__(self):
@@ -25,33 +24,23 @@ class LocationsController:
         pass
 
     @staticmethod
-    def sort_by_category(sorting_category='price'):
+    def sort_by_category(sorting_category, user_id):
         """
-        Return: List of all locations ranked by crime rate
+        Return: A tuple, (ranked locations, their score)
         """
+
         locations = LocationsController.get_locations()
-        return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category=sorting_category)
-    
-    # def sortByPrice():
-    #     pass
 
-    # def sortBySchools():
-    #     pass
-
-    # def sortByMalls():
-    #     pass
-
-    @staticmethod
-    def sortByScore(user_id):
-        """
-        Return: A tuple,  (top 5 locations, their score)
-
-        """
-        all_locations = LocationsController.get_locations()
-        importance_rank = Preferences.PreferenceContoller.get_user_preference(user_id=user_id)
-        top5_ranked_locations = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='score', importance_rank=importance_rank)
-
-        return top5_ranked_locations
+        if sorting_category == 'score':
+            if not user_id:
+                return None
+            else:
+                preferences = Preferences.PreferenceContoller.get_user_preferences(user_id=user_id)
+                return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category='score', preferences=preferences)
+            
+        else:
+            return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category=sorting_category)
+            
 
     def summarised_details(location: str, sorting_category='price'):
         """

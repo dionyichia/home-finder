@@ -1,170 +1,165 @@
 import Locations, Preferences
-
 from operator import itemgetter
 
 class ScoringController:
-    def __init__(self, importance_rank):
-        """
-        Upon registering, take importance rank and set it as attribute of scoring class. 
-        """
-        self.importance_rank = importance_rank
-        self.weights = [1, 0.75, 0.5, 0.25] 
-
-
+    """
+    A class for scoring and ranking locations based on various criteria.
+    Refactored to be stateless.
+    """
+    
     @staticmethod
-    def assign_score_n_rank_all_locations(locations, category='price', importance_rank=['price', 'crime', 'transport', 'schools', 'malls']):
+    def assign_score_n_rank_all_locations(locations: list, preferences: list, category='price'):
         """
         Used for filter by category 
         Assigns a category score to a list of locations, re orders list of locations based on score.
         If the category is 'score', user is registered and top5 locations is returned instead.
         Else, user is not registered.
 
-        Args: Category used for filter, default is price
-        Return: If unregistered, All locations ranked by category score. If registered, top 5 locations ranked by score.
-
-        Assumptions: Assumes an importance rank of ['price', 'crime', 'transport', 'schools', 'malls']
-        Chosen category assumes rank 1, followed by rest in the same order as above. 
+        Args: 
+            locations: List of location dictionaries
+            preferences: User preferences
+            category: Category used for filter, default is price
+        Return: 
+            If unregistered, All locations ranked by category score. 
+            If registered, top 5 locations ranked by score.
         """
-
-        scored_and_ranked_locations = {}
-
-        # # Alter list of importance rank, make the categroy rank 1
-        # if category != 'score':
-        #     importance_rank.remove(category)
-        #     importance_rank.insert(0, category)
-
-        # Score for each location for each category is independent of other factors. I.e. if filtering by crime rate, the score shown will be purely ranked by crime rate.
+        # Score for each location for each category is independent of other factors.
         # Only for scoring by user's preference will the importance rank be taken into consideration.
         match category:
-
-            # case 'crime':
-            #     return sorted(locations, key=itemgetter('crime_rate'), reverse=True)
-
-            # case 'schools':
-            #     return sorted(locations, key=itemgetter('schools'), reverse=True)
-
-            # case 'malls':
-            #     return sorted(locations, key=itemgetter('malls'), reverse=True)
-
-            # case 'transport':
-            #     return sorted(locations, key=itemgetter('transport'), reverse=True)
-
             # Return top 5 locations, scored by user's importance rank
             case 'score':
-                ranked_by_pref = []
-                
-            
-                for location in locations:
-                    total_score = 0
-
-                    # Importance weight: 1, 0.8, 0.6, 0.4, 0.2
-                    for idx in range(len(importance_rank)):
-                        total_score += location.get(importance_rank[idx]) * (1 - 0.25 * idx) 
-                        
-                    ranked_by_pref.append((location, total_score))
-
-                # Sort in descending order based on score
-                ranked_by_pref.sort(reverse=True, key=lambda x: x[1])
-                            
-
-                # return top 5 locations
-                return ranked_by_pref[:5]
+                return ScoringController.calculate_score_for_preferences(locations=locations, preferences=preferences)
 
             # Default all other categories
             case _:
-                reranked_list =  sorted(locations, key=itemgetter(category), reverse=True)
-                return ScoringController.calculate_score(ranked_locations=reranked_list, category=category)
-
-        return scored_and_ranked_locations
+                reranked_list = sorted(locations, key=itemgetter(category), reverse=True)
+                return ScoringController.normalise_score_for_categories(ranked_locations=reranked_list, category=category)
     
-    # Category score for each district is calculated by dividing the current location score vs the highest location score.
-    def calculate_score_for_categories(ranked_locations: list, category: str):
-        highest = ranked_locations[0].get(category)
-
-        return [(location, round(location.get(category, 0) / highest, 1)) if highest != 0 else (location, 0) 
-            for location in ranked_locations]
-    
-
-
-
-# import Locations, Preferences
-# from operator import itemgetter
-
-# class ScoringController:
-#     """
-#     A class for scoring and ranking locations based on various criteria.
-#     Refactored to be stateless.
-#     """
-    
-#     @staticmethod
-#     def assign_score_n_rank_all_locations(locations, category='price', importance_rank=['price', 'crime', 'transport', 'schools', 'malls']):
-#         """
-#         Used for filter by category 
-#         Assigns a category score to a list of locations, re orders list of locations based on score.
-#         If the category is 'score', user is registered and top5 locations is returned instead.
-#         Else, user is not registered.
-
-#         Args: 
-#             locations: List of location dictionaries
-#             category: Category used for filter, default is price
-#             importance_rank: User's preference ranking of categories
-#         Return: 
-#             If unregistered, All locations ranked by category score. 
-#             If registered, top 5 locations ranked by score.
-#         """
-#         scored_and_ranked_locations = {}
-
-#         # Score for each location for each category is independent of other factors.
-#         # Only for scoring by user's preference will the importance rank be taken into consideration.
-#         match category:
-#             # Return top 5 locations, scored by user's importance rank
-#             case 'score':
-#                 # Calculate weighted scores for each location
-#                 ranked_by_pref = []
-                
-#                 # Standard weights for importance ranking
-#                 weights = [1, 0.75, 0.5, 0.25, 0]
-                
-#                 for location in locations:
-#                     total_score = 0
-                    
-#                     # Apply weights based on importance ranking
-#                     for idx, category in enumerate(importance_rank):
-#                         # Use the appropriate weight based on ranking position
-#                         weight = weights[idx] if idx < len(weights) else 0
-#                         total_score += location.get(category, 0) * weight
-                        
-#                     ranked_by_pref.append((location, total_score))
-
-#                 # Sort in descending order based on score
-#                 ranked_by_pref.sort(reverse=True, key=lambda x: x[1])
-                            
-#                 # Return top 5 locations
-#                 return ranked_by_pref[:5]
-
-#             # Default all other categories
-#             case _:
-#                 reranked_list = sorted(locations, key=itemgetter(category), reverse=True)
-#                 return ScoringController.calculate_score(ranked_locations=reranked_list, category=category)
-
-#         return scored_and_ranked_locations
-    
-#     @staticmethod
-#     def calculate_score(ranked_locations: list, category: str):
-#         """
-#         Category score for each district is calculated by dividing the current location score 
-#         vs the highest location score.
+    @staticmethod
+    def normalise_score_for_categories(ranked_locations: list, category: str):
+        """
+        Category score for each district is calculated by dividing the current location score 
+        vs the highest location score.
         
-#         Args:
-#             ranked_locations: List of location dictionaries, already sorted
-#             category: The category being scored
-#         Returns:
-#             List of tuples containing (location, normalized_score)
-#         """
-#         if not ranked_locations:
-#             return []
-            
-#         highest = ranked_locations[0].get(category, 0)
+        Args:
+            ranked_locations: List of location dictionaries, already sorted
+            category: The category being scored
+        Returns:
+            List of tuples containing (location, normalized_score)
+        """
+        if not ranked_locations:
+            return []
+        
+        # for price and crime rate, the lower the better
+        if category == 'price' or category == 'crime_rate':
+            lowest = ranked_locations[-1].get(category, 0)
 
-#         return [(location, round(location.get(category, 0) / highest, 1)) if highest != 0 else (location, 0) 
-#             for location in ranked_locations]
+            return [(location, round(lowest / location.get(category, 0), 1)) if lowest != 0 else (location, 0) 
+                for location in reversed(ranked_locations)]
+            
+        # for num schools, malls, transport, the higher the better
+        else:
+            highest = ranked_locations[0].get(category, 0)
+
+            return [(location, round(location.get(category, 0) / highest, 1)) if highest != 0 else (location, 0) 
+                for location in ranked_locations]
+    
+    @staticmethod
+    def calculate_score_for_preferences(locations: list, preferences: dict):
+        """
+        Calculates weighted scores for locations based on user preferences.
+        
+        Args:
+            locations: List of location dictionaries
+            preferences: Dictionary containing user preferences including:
+                - importance_rank: List of categories ranked by importance
+                - price: Ideal price
+                - other category preferences
+        
+        Returns:
+            List of top 5 locations with their scores, sorted by final score
+        """
+        # Calculate weights based on importance ranking
+        weights = {}
+        number_of_categories = len(preferences['importance_rank'])
+        for cat_importance_idx in range(number_of_categories):
+            category = preferences['importance_rank'][cat_importance_idx]
+            weights[category] = number_of_categories - cat_importance_idx
+        
+        total_weight = sum(weights.values())
+        
+        # Find min/max values for normalization
+        min_max_values = {
+            'price': {'min': float('inf'), 'max': 0},
+            'crime_rate': {'min': float('inf'), 'max': 0},
+            'schools': {'min': float('inf'), 'max': 0},
+            'malls': {'min': float('inf'), 'max': 0},
+            'transport': {'min': float('inf'), 'max': 0}
+        }
+        
+        for location in locations:
+            for category in min_max_values.keys():
+                if category in location:
+                    min_max_values[category]['min'] = min(min_max_values[category]['min'], location[category])
+                    min_max_values[category]['max'] = max(min_max_values[category]['max'], location[category])
+        
+        scored_locations = []
+        for location in locations:
+            # Calculate individual category scores
+            category_scores = {}
+            
+            # Special handling for price (proximity to ideal price)
+            if 'price' in location and 'price' in preferences:
+                ideal_price = preferences['price']
+                actual_price = location['price']
+                # Calculate proximity score (10 = perfect match, 0 = very far)
+                price_diff_percentage = abs(actual_price - ideal_price) / ideal_price if ideal_price > 0 else 1
+                # Cap at 100% difference
+                price_diff_percentage = min(price_diff_percentage, 1)
+                category_scores['price'] = 10 * (1 - price_diff_percentage)
+            else:
+                category_scores['price'] = 0
+            
+            # Normalize crime_rate (lower is better)
+            if 'crime_rate' in location:
+                min_val = min_max_values['crime_rate']['min']
+                max_val = min_max_values['crime_rate']['max']
+                if max_val > min_val:
+                    normalized = (max_val - location['crime_rate']) / (max_val - min_val)
+                    category_scores['crime_rate'] = normalized * 10
+                else:
+                    category_scores['crime_rate'] = 10
+            else:
+                category_scores['crime_rate'] = 0
+            
+            # Normalize other attributes (higher is better)
+            for category in ['schools', 'malls', 'transport']:
+                if category in location:
+                    min_val = min_max_values[category]['min']
+                    max_val = min_max_values[category]['max']
+                    if max_val > min_val:
+                        normalized = (location[category] - min_val) / (max_val - min_val)
+                        category_scores[category] = normalized * 10
+                    else:
+                        category_scores[category] = 10 if location[category] > 0 else 0
+                else:
+                    category_scores[category] = 0
+            
+            # Calculate final weighted score
+            weighted_score = 0
+            for category, score in category_scores.items():
+                if category in weights:
+                    weighted_score += score * weights[category]
+            
+            # Normalize final score
+            final_score = weighted_score / total_weight if total_weight > 0 else 0
+            
+            # Create result object with all relevant data
+            result = location.copy()  # Copy all original location data
+            result['score'] = round(final_score, 2)
+            result['category_scores'] = {k: round(v, 2) for k, v in category_scores.items()}
+            
+            scored_locations.append(result)
+        
+        # Sort by score (highest first) and return top 5
+        return sorted(scored_locations, key=lambda x: x['score'], reverse=True)[:5]
