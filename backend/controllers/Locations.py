@@ -10,97 +10,110 @@ class LocationsController:
     @staticmethod
     def get_locations():
         """
-        SQL Query for DB data
+        SQL Query for DB data for all locations
+
+        Return: List of dicts, each location 1 dict
         """
         pass
-
-    def sortByPrice():
+    
+    def get_location(location_name):
         """
-        SQL Query for DB data
+        SQL Query for DB data for single location
+
+        Return: 1 dict of locations
         """
         pass
 
     @staticmethod
-    def sort_by_crime_rate():
+    def sort_by_category(sorting_category='price'):
         """
         Return: List of all locations ranked by crime rate
         """
-        pass
+        locations = LocationsController.get_locations()
+        return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category=sorting_category)
+    
+    # def sortByPrice():
+    #     pass
 
-    def sortBySchools():
-        pass
+    # def sortBySchools():
+    #     pass
 
-    def sortByMalls():
-        pass
+    # def sortByMalls():
+    #     pass
 
+    @staticmethod
     def sortByScore(user_id):
         """
-        Get top 5 locations, their score and summarised details
+        Return: A tuple,  (top 5 locations, their score)
+
         """
         all_locations = LocationsController.get_locations()
         importance_rank = Preferences.PreferenceContoller.get_user_preference(user_id=user_id)
-        top5_ranked_locations = Scoring.ScoringController.assign_score_to_all_locations(all_locations, category='score', importance_rank=importance_rank)
+        top5_ranked_locations = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='score', importance_rank=importance_rank)
 
         return top5_ranked_locations
 
-    def summarised_details(location: str, sort_by='price'):
+    def summarised_details(location: str, sorting_category='price'):
         """
+        WHEN WILL U EVER NEED THIS??
+
         Get the summarised details of the location.
         Sumarised details include: 
         1. Category Rank
         2. Category score, i.e. if Price score
         3. Average price of housing
+
+        Return: A dict, (top 5 locations, their score) 
         """
-        
         pass
 
 
 class LocationsDetailController:
     """
-    
-    """
-    def __init__(self):
-        """
-        Composition relationship for PricePlotter
-        """
-        self.price = None
-        self.crime = None
-        self.crime_rate = None
-        self.schools = None
-        self.malls = None
-        self.score = None
-        pass
+    On call, function gets location details from multiple caches
+    Eliminates the need for a specific LocationsDetailsDB
 
-    def get_location_details(self, location_name: str) -> dict:
+    """
+
+    @staticmethod
+    def get_location_details(location_name: str) -> dict:
         """
+        SQL Query for DB data for single location details
+
         Args: Unique Location Name
         Return: Dict containing location details
         
         """
 
-        # Get Location Details
+        """"""
+        location = LocationsController.get_location(location_name=location_name)
 
-        past_resale_prices = [(0,0)]
+        # Get Location Details
+        past_resale_prices = location
 
         # Get Price Trend Graph
         price = PricePlotterClass.plot_price_trend(past_resale_prices)
 
-        # Get crimes and crime_rate from LocationDetails table
+        # Get crimes and crime_rate
         crimes = api.fetch_crimes.fetch_all_crimes_by_location(location=location_name)
-        crime_rate = api.fetch_crimes.fetch_crime_rate_by_location(location_name=location_name)
+        crime_rate = location.get('crime_rate', 0.00)
 
-        # Get schools from LocationDetails table
-        schools = None
+        # Get nums schools /and distance to nearest schools
+        schools = location.get('schools', 0)
+        # api.fetch_district.fetch_all_schools_by_location() , havent do
 
-        # Get malls from LocationDetails table
-        malls = None
+        # Get malls /and distance to nearest schools
+        malls = location.get('malls', 0)
 
         # Score Location according to preferences
         all_locations = LocationsController.get_locations()
-        all_location_scored = Scoring.ScoringController.assign_score_to_all_locations(locations=all_locations)
-        for location in all_location_scored:
+
+        # Check if user has registered !!!! If no default to price, if yes change to score
+
+        all_location_scored = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='score')
+        for location, score in all_location_scored:
             if location.get('name') == location_name:
-                location_score = location.get('score') 
+                location_score = score
                 break
 
         return {
@@ -113,8 +126,6 @@ class LocationsDetailController:
         }
 
 class PricePlotterClass:
-    def __init__(self):
-        pass
 
     @staticmethod
     def plot_price_trend(past_resale_prices):

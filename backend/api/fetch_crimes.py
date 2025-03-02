@@ -223,5 +223,8 @@ def fetch_crime_rate_by_location(location_name: str):
 def csv_to_db():
     """
     Updates LocationDetailsDB and LocationsDB
+
+    LocationsDB should have a coloumn for crime_rate
+    LocationDetailsDB should have a coloumn for crime_data
     """
     pass
