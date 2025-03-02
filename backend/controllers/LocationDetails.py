@@ -1,5 +1,5 @@
-import api
-import Locations, Plotter, Scoring
+from api import fetch_crimes
+from controllers import Locations, Plotter, Scoring
 
 class LocationsDetailController:
     """
@@ -28,7 +28,7 @@ class LocationsDetailController:
         price = Plotter.PricePlotterClass.plot_price_trend(past_resale_prices)
 
         # Get crimes and crime_rate
-        crimes = api.fetch_crimes.fetch_all_crimes_by_location(location=location_name)
+        crimes = fetch_crimes.fetch_all_crimes_by_location(location=location_name)
         crime_rate = location.get('crime_rate', 0.00)
 
         # Get nums schools /and distance to nearest schools

@@ -26,7 +26,7 @@ class PreferenceController:
                 cursor = conn.cursor()
                 
                 # Query to get all preferences for the user
-                query = "SELECT user_id, crime_rate, resale_price, distance_to_sch, distance_to_mall, distance_to_transport, importance_rank FROM preferences WHERE user_id = ?"
+                query = "SELECT user_id, crime_rate, resale_price, num_schools, num_malls, num_transport, importance_rank FROM preferences WHERE user_id = ?"
                 cursor.execute(query, (user_id,))
                 
                 # Fetch the result
@@ -38,9 +38,9 @@ class PreferenceController:
                         'user_id': result[0],
                         'crime_rate': result[1],
                         'resale_price': result[2],
-                        'distance_to_sch': result[3],
-                        'distance_to_mall': result[4],
-                        'distance_to_transport': result[5],
+                        'num_schools': result[3],
+                        'num_malls': result[4],
+                        'num_transport': result[5],
                         'importance_rank': result[6]
                     }
                 return None
@@ -53,18 +53,18 @@ class PreferenceController:
         """
         Adds or updates user preferences in the PreferenceDB
         Args: user_id, preferences (list containing crime_rate, resale_price, 
-            distance_to_sch, distance_to_mall, distance_to_transport, importance_rank),
+            num_schools, num_malls, num_transport, importance_rank),
             db_name (optional)
         Return: True if operation is successful, False if some error occurs.
         """
         db_path = PreferenceController.get_db_path(db_name)
         
-        crime_rate = preferences[0]
-        resale_price = preferences[1]
-        distance_to_sch = preferences[2]
-        distance_to_mall = preferences[3]
-        distance_to_transport = preferences[4]
-        importance_rank = preferences[5]
+        crime_rate = preferences['crime']
+        resale_price = preferences['price']
+        num_schools = preferences['schools']
+        num_malls = preferences['malls']
+        num_transport = preferences['transport']
+        importance_rank = preferences['importance_rank']
 
         try:
             # Establish a database connection
@@ -80,25 +80,26 @@ class PreferenceController:
                     update_query = """
                     UPDATE preferences 
                     SET crime_rate = ?, resale_price = ?, 
-                        distance_to_sch = ?, distance_to_mall = ?, 
-                        distance_to_transport = ?, importance_rank = ? 
+                        num_schools = ?, num_malls = ?, 
+                        num_transport = ?, importance_rank = ? 
                     WHERE user_id = ?
                     """
                     cursor.execute(update_query, (crime_rate, resale_price, 
-                                                distance_to_sch, distance_to_mall, 
-                                                distance_to_transport, importance_rank, 
+                                                num_schools, num_malls, 
+                                                num_transport, importance_rank, 
                                                 user_id))
                 else:
                     # Insert the new user preferences into the preferences table
                     insert_query = """
-                    INSERT INTO preferences (user_id, crime_rate, resale_price, 
-                                            distance_to_sch, distance_to_mall, 
-                                            distance_to_transport, importance_rank) 
+                    INSERT INTO preferences 
+                        (user_id, crime_rate, resale_price, 
+                        num_schools, num_malls, num_transport, 
+                        importance_rank) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     """
                     cursor.execute(insert_query, (user_id, crime_rate, resale_price, 
-                                                distance_to_sch, distance_to_mall, 
-                                                distance_to_transport, importance_rank))
+                                                num_schools, num_malls, 
+                                                num_transport, importance_rank))
 
                 # Commit the transaction
                 conn.commit()

@@ -1,4 +1,4 @@
-import Locations, Preferences
+from controllers import Locations, Preferences
 from operator import itemgetter
 
 class ScoringController:
@@ -8,7 +8,7 @@ class ScoringController:
     """
     
     @staticmethod
-    def assign_score_n_rank_all_locations(locations: list, preferences: list, category='price'):
+    def assign_score_n_rank_all_locations(locations: list, category='price', preferences=None):
         """
         Used for filter by category 
         Assigns a category score to a list of locations, re orders list of locations based on score.

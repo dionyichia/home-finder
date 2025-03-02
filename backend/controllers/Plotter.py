@@ -1,3 +1,5 @@
+# import sckilearn, matplotlib or seaborn or smth, need a fan chart to show max, ave, min
+
 class PricePlotterClass:
 
     @staticmethod

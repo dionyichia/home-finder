@@ -8,7 +8,7 @@ class UserController:
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
 
     @staticmethod
-    def create_new_user(username: str, email: str, db_name='users.db') -> int:
+    def create_new_user(username: str, email: str, password: str, db_name='users.db') -> int:
         """
         Add a new user into the UserDB with some SQL commands.
 
@@ -22,8 +22,8 @@ class UserController:
                 cursor = conn.cursor()
                 
                 # Insert the new user into the UserDB
-                insert_query = "INSERT INTO users (userid, username, email) VALUES (NULL, ?, ?)"
-                cursor.execute(insert_query, (username, email))
+                insert_query = "INSERT INTO users (userid, username, email, password) VALUES (NULL, ?, ?, ?)"
+                cursor.execute(insert_query, (username, email, password))
                 
                 # Get the auto-generated user ID
                 user_id = cursor.lastrowid

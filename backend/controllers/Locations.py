@@ -1,5 +1,5 @@
-import api
-import Preferences, Scoring
+from api import *
+from controllers import Preferences, Scoring
 import os
 import sqlite3
 
@@ -77,7 +77,7 @@ class LocationsController:
             return None
 
     @staticmethod
-    def sort_by_category(sorting_category, user_id):
+    def sort_by_category(sorting_category, user_id=None):
         """
         Return: A tuple, (ranked locations, their score)
         """
