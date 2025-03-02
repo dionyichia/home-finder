@@ -1,29 +1,31 @@
-import Locations
+# I think dont need this class
 
-class Map:
-    def __init__(self, filter_by: str):
-        self.filter = filter_by
+# import Locations
 
-    def display_locations(self):
-        match self.filter:
+# class Map:
+#     def __init__(self, filter_by: str):
+#         self.filter = filter_by
 
-            # Swtich infomation on overlay, should be the same overlay for all cases, just adjusted based on cat
-            case 'crime':
-                Locations.LocationsController.sort_by_crime()
-                pass
+#     def display_locations(self):
+#         match self.filter:
 
-            case 'schools':
-                pass
+#             # Swtich infomation on overlay, should be the same overlay for all cases, just adjusted based on cat
+#             case 'crime':
+#                 Locations.LocationsController.sort_by_crime()
+#                 pass
 
-            case 'malls':
-                pass
+#             case 'schools':
+#                 pass
 
-            case 'score':
-                # 
-                pass
+#             case 'malls':
+#                 pass
 
-            # Default Price
-            case _:
+#             case 'score':
+#                 # 
+#                 pass
 
-                pass
+#             # Default Price
+#             case _:
+
+#                 pass
             

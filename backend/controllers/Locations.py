@@ -1,27 +1,80 @@
 import api
-import Preferences
-import Scoring
+import Preferences, Scoring
+import os
+import sqlite3
 
 class LocationsController:
-    def __init__(self):
-        pass
 
     @staticmethod
-    def get_locations():
+    def get_db_path(db_name=':memory:'):
+        """Returns the database path based on the provided name"""
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
+
+    @staticmethod
+    def get_locations(db_name='locations.db'):
         """
         SQL Query for DB data for all locations
 
         Return: List of dicts, each location 1 dict
         """
-        pass
-    
-    def get_location(location_name):
+        db_path = LocationsController.get_db_path(db_name)
+
+        try:
+            # Establish a database connection
+            with sqlite3.connect(db_path) as conn:
+                # Set row_factory to get dictionaries instead of tuples
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                # Query to get all locations
+                query = "SELECT * FROM locations"
+                cursor.execute(query)
+                
+                # Fetch all results and convert to dictionaries
+                rows = cursor.fetchall()
+                
+                if rows:
+                    # Convert each sqlite3.Row to a dictionary
+                    return [dict(row) for row in rows]
+                else:
+                    return []
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return []
+
+    @staticmethod
+    def get_location(location_name, db_name='locations.db'):
         """
         SQL Query for DB data for single location
 
-        Return: 1 dict of locations
+        Return: 1 dict of location or None if not found
         """
-        pass
+        db_path = LocationsController.get_db_path(db_name)
+
+        try:
+            # Establish a database connection
+            with sqlite3.connect(db_path) as conn:
+                # Set row_factory to get dictionary instead of tuple
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                # Query to get location by name
+                query = "SELECT * FROM locations WHERE location_name = ?"
+                cursor.execute(query, (location_name,))
+                
+                # Fetch the result
+                result = cursor.fetchone()
+
+                if result:
+                    # Convert sqlite3.Row to dictionary
+                    return dict(result)
+                else:
+                    return None
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return None
 
     @staticmethod
     def sort_by_category(sorting_category, user_id):
@@ -55,73 +108,3 @@ class LocationsController:
         Return: A dict, (top 5 locations, their score) 
         """
         pass
-
-
-class LocationsDetailController:
-    """
-    On call, function gets location details from multiple caches
-    Eliminates the need for a specific LocationsDetailsDB
-
-    """
-
-    @staticmethod
-    def get_location_details(location_name: str) -> dict:
-        """
-        SQL Query for DB data for single location details
-
-        Args: Unique Location Name
-        Return: Dict containing location details
-        
-        """
-
-        """"""
-        location = LocationsController.get_location(location_name=location_name)
-
-        # Get Location Details
-        past_resale_prices = location
-
-        # Get Price Trend Graph
-        price = PricePlotterClass.plot_price_trend(past_resale_prices)
-
-        # Get crimes and crime_rate
-        crimes = api.fetch_crimes.fetch_all_crimes_by_location(location=location_name)
-        crime_rate = location.get('crime_rate', 0.00)
-
-        # Get nums schools /and distance to nearest schools
-        schools = location.get('schools', 0)
-        # api.fetch_district.fetch_all_schools_by_location() , havent do
-
-        # Get malls /and distance to nearest schools
-        malls = location.get('malls', 0)
-
-        # Score Location according to preferences
-        all_locations = LocationsController.get_locations()
-
-        # Check if user has registered !!!! If no default to price, if yes change to score
-
-        all_location_scored = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='score')
-        for location, score in all_location_scored:
-            if location.get('name') == location_name:
-                location_score = score
-                break
-
-        return {
-            'price': price,
-            'crime': crimes,
-            'crime_rate': crime_rate,
-            'schools': schools,
-            'malls': malls,
-            'score': location_score,
-        }
-
-class PricePlotterClass:
-
-    @staticmethod
-    def plot_price_trend(past_resale_prices):
-        """
-        Plot the price trend of resale prices for a given location.
-        Args: Takes in past resale prices, plot graph of time vs price for ave 3 room flat
-        Returns: 
-        """
-        pass
-
