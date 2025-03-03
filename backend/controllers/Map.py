@@ -1,31 +1,22 @@
-# I think dont need this class
+import Locations
+import os
 
-# import Locations
+class Map:
+    @staticmethod
+    def get_db_path(db_name=':memory:'):
+        """Returns the database path based on the provided name"""
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
 
-# class Map:
-#     def __init__(self, filter_by: str):
-#         self.filter = filter_by
-
-#     def display_locations(self):
-#         match self.filter:
-
-#             # Swtich infomation on overlay, should be the same overlay for all cases, just adjusted based on cat
-#             case 'crime':
-#                 Locations.LocationsController.sort_by_crime()
-#                 pass
-
-#             case 'schools':
-#                 pass
-
-#             case 'malls':
-#                 pass
-
-#             case 'score':
-#                 # 
-#                 pass
-
-#             # Default Price
-#             case _:
-
-#                 pass
-            
+    @staticmethod
+    def get_location_geo_data(location_name: str):
+        """
+        Return a list of geo_data (points)
+        """
+        pass
+    
+    @staticmethod
+    def get_all_locations_geo_data():
+        """
+        Return a dict, location name: geo_data
+        """
+        pass
