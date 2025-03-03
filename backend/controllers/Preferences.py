@@ -12,7 +12,7 @@ class PreferenceController:
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
     
     @staticmethod
-    def get_user_preferences(user_id: int, db_name='preferences.db'):
+    def get_user_preferences(user_id: int, db_name='app.db'):
         """
         Gets all user preferences from PreferenceDB
         Args: user_id, db_name (optional)
@@ -49,7 +49,7 @@ class PreferenceController:
             return None
 
     @staticmethod
-    def add_user_preferences(user_id: int, preferences: list, db_name='preferences.db'):
+    def add_user_preferences(user_id: int, preferences: list, db_name='app.db'):
         """
         Adds or updates user preferences in the PreferenceDB
         Args: user_id, preferences (list containing crime_rate, resale_price, 

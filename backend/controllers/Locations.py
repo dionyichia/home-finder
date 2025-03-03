@@ -11,7 +11,7 @@ class LocationsController:
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
 
     @staticmethod
-    def get_locations(db_name='locations.db'):
+    def get_locations(db_name='app.db'):
         """
         SQL Query for DB data for all locations
 
@@ -44,7 +44,7 @@ class LocationsController:
             return []
 
     @staticmethod
-    def get_location(location_name, db_name='locations.db'):
+    def get_location(location_name, db_name='app.db'):
         """
         SQL Query for DB data for single location
 

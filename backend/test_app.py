@@ -43,10 +43,29 @@ def test_register_endpoint(client):
     response = client.post('/register', 
                            data=json.dumps(test_user),
                            content_type='application/json')
+    print(json.loads(response.data))
     assert response.status_code == 201
     
     # Test duplicate registration
     response = client.post('/register', 
-                           data=json.dumps(test_user),
-                           content_type='application/json')
+            data=json.dumps(test_user),
+            content_type='application/json')
+    
+    print(json.loads(response.data))
     assert response.status_code == 409
+
+    # Test successful updating of user information
+    # response = client.post('/register', 
+    #         data=json.dumps(test_user),
+    #         content_type='application/json')
+
+    # print(json.loads(response.data))
+    # assert response.status_code == 409
+
+    # Test successful removing of user
+    # response = client.post('/register', 
+    #         data=json.dumps(test_user),
+    #         content_type='application/json')
+
+    # print(json.loads(response.data))
+    # assert response.status_code == 409

@@ -1,37 +1,120 @@
 import sqlite3
 import os
+from controllers import Preferences
 
 class UserController:
     @staticmethod
-    def get_db_path(db_name=':memory:'):
-        # Set the database path to the parent folder
+    def get_db_path(db_name='app.db'):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
 
     @staticmethod
-    def create_new_user(username: str, email: str, password: str, db_name='users.db') -> int:
+    def create_new_user(username: str, email: str, password: str, preferences: list) -> int:
         """
-        Add a new user into the UserDB with some SQL commands.
+        Register a new user and set their preferences.
 
-        Return: UserID if insertion is successful, None if some error occurs.
+        Returns: UserID if insertion is successful, None if an error occurs.
         """
-        db_path = UserController.get_db_path(db_name)
+        db_path = UserController.get_db_path()
         
         try:
-            # Establish a database connection
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
                 
-                # Insert the new user into the UserDB
-                insert_query = "INSERT INTO users (userid, username, email, password) VALUES (NULL, ?, ?, ?)"
+                # Insert the new user into the database
+                insert_query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"
                 cursor.execute(insert_query, (username, email, password))
                 
-                # Get the auto-generated user ID
+                # Get the generated user ID
                 user_id = cursor.lastrowid
                 
                 # Commit the transaction
                 conn.commit()
-                
+
+            # Add user preferences
+            Preferences.PreferenceController.add_user_preferences(user_id=user_id, preferences=preferences)
+
             return user_id
         except Exception as e:
             print(f"Error occurred: {e}")
             return None
+
+    @staticmethod
+    def change_user_details(user_id: int, new_username: str, new_user_email: str, new_password: str, preferences: list):
+        """
+        Updates user preferences.
+
+        Returns: True if updated, False if error.
+        """
+        db_path = UserController.get_db_path()
+        
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+
+                # Check if the user_id exists in the preferences table
+                cursor.execute("SELECT COUNT(*) FROM users WHERE user_id = ?", (user_id,))
+                exists = cursor.fetchone()[0] > 0
+
+                if exists:
+                    # Update the existing user preferences
+                    update_query = """
+                    UPDATE users 
+                    SET username = ?, email = ?, 
+                        password = ?
+                    WHERE user_id = ?
+                    """
+                    cursor.execute(update_query, (new_username, new_user_email, new_password, 
+                                                user_id))
+                    # Commit the transaction
+                    conn.commit()
+
+                else:
+                    print(f"Error occurred: User not found in users")
+                    return False
+                
+            Preferences.PreferenceController.add_user_preferences(user_id=user_id, preferences=preferences)
+            return True
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return False
+
+    @staticmethod
+    def check_if_user_does_not_exist(username: str, email: str):
+        """
+        Returns: True if user is not found.
+        """
+        db_path = UserController.get_db_path()
+        
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                query = "SELECT COUNT(*) FROM users WHERE username = ? OR email = ?"
+                cursor.execute(query, (username, email))
+                count = cursor.fetchone()[0]
+                print('connected count: ', count)
+                
+            return count == 0
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return False
+
+    @staticmethod
+    def verify_user(username: str, email: str, password: str):
+        """
+        Verifies user login credentials.
+
+        Returns: User ID if valid, False otherwise.
+        """
+        db_path = UserController.get_db_path()
+        
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                query = "SELECT user_id FROM users WHERE username = ? AND email = ? AND password = ?"
+                cursor.execute(query, (username, email, password))
+                result = cursor.fetchone()
+                
+            return result is not None
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return False
