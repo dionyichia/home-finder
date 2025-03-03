@@ -1,6 +1,10 @@
 import Locations
 import os
 
+"""
+Used to interface with saved location geodata and other data cached from onemap api
+"""
+
 class Map:
     @staticmethod
     def get_db_path(db_name=':memory:'):
