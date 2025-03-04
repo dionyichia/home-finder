@@ -21,9 +21,6 @@ venv/
 *.bak
 .DS_Store
 
-# Ignore Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
 # Ignore test coverage and profiling data
 .coverage
 htmlcov/
@@ -36,5 +33,5 @@ dist/
 *.egg-info/
 
 # Ignore environment files
-# .env
-# *.env
+.env
+*.env

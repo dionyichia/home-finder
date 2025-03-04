@@ -217,9 +217,6 @@ def fetch_crime_rate_by_location(location_name: str):
 
     return '0'
 
-
-
-
 def csv_to_db():
     """
     Updates LocationDetailsDB and LocationsDB
