@@ -1,4 +1,4 @@
-from api import *
+from api import fetch_districts
 from controllers import Preferences, Scoring
 import os
 import sqlite3
@@ -20,6 +20,7 @@ class LocationsController:
         db_path = LocationsController.get_db_path(db_name)
 
         try:
+            all_location_details = []
             # Establish a database connection
             with sqlite3.connect(db_path) as conn:
                 # Set row_factory to get dictionaries instead of tuples
@@ -34,10 +35,20 @@ class LocationsController:
                 rows = cursor.fetchall()
                 
                 if rows:
-                    # Convert each sqlite3.Row to a dictionary
-                    return [dict(row) for row in rows]
+                    for row in rows:
+                        # Convert each sqlite3.Row to a dictionary
+                        location_details = dict(row)
+
+                        # Get location's geojson data
+                        location_details["geojson"] = fetch_districts.get_location_geodata(location_details['location_name'])
+
+                        all_location_details.append(location_details)
+                
+                        return all_location_details
+
                 else:
                     return []
+                
 
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -75,6 +86,9 @@ class LocationsController:
         except Exception as e:
             print(f"Error occurred: {e}")
             return None
+        
+    def get_location_geojson(location_name: str):
+        return 
 
     @staticmethod
     def sort_by_category(sorting_category, user_id=None):

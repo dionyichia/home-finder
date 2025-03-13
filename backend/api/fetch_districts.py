@@ -4,12 +4,17 @@
 
 import requests
 import os
+import sqlite3
 import json
 import csv
 from dotenv import load_dotenv
 
 CACHE_DIR = "../api_cache"
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "location_coordinates.csv")
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app.db')
+
+
+
 
 def get_access_token():
     load_dotenv()
@@ -75,23 +80,136 @@ def save_to_csv(csv_filename, data):
         print(f"Error: {e}")
         return False
     
-def get_location_geodata(location_name, csv_filename=CACHE_LOCATION_COORDINATES_FILE):
+def save_to_db(db_path=DB_PATH):
+    """
+    Save all locations geodata to coordinates column in location_details in app.db.
+    Update existing records or insert new ones if location_name doesn't exist.
+    """
+    locations_geodata = get_all_location_geodata_from_csv()
+
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            # Set row_factory to get dictionary instead of tuple
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            for location_geodata in locations_geodata: 
+                # Each location_geodata is a dict with one item where key is location name and value is coordinates
+                for location_name, coordinates in location_geodata.items():
+                    # Convert coordinates to JSON string
+                    coordinates_json = json.dumps(coordinates)
+                    
+                    # Check if location_name exists
+                    cursor.execute("SELECT COUNT(*) FROM location_details WHERE location_name = ?", (location_name,))
+                    exists = cursor.fetchone()[0] > 0
+                    
+                    if exists:
+                        # Update existing record
+                        query = "UPDATE location_details SET coordinates = ? WHERE location_name = ?"
+                        cursor.execute(query, (coordinates_json, location_name))
+                    else:
+                        # Insert new record
+                        query = "INSERT INTO location_details (location_name, coordinates) VALUES (?, ?)"
+                        cursor.execute(query, (location_name, coordinates_json))
+            
+            # Commit changes
+            conn.commit()
+            return True
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return False
+    
+def get_all_location_geodata_from_csv(csv_filename=CACHE_LOCATION_COORDINATES_FILE) -> list:
+    """
+    Return: list of dicts, each location has 1 dict, with key as location name and value as location coordinates.
+    """
+    result = []
     try:
         with open(csv_filename, mode="r", newline="") as file:
             reader = csv.DictReader(file)
             for row in reader:
-                if row["Planning Area"].strip().lower() == location_name.strip().lower():
-                    return json.loads(row["Coordinates"])
+                location_name = row["Planning Area"].strip()
+                coordinates = json.loads(row["Coordinates"])
+                result.append({location_name: coordinates})
     except FileNotFoundError:
         print(f"Error: CSV file '{csv_filename}' not found.")
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    return result
+
+def get_location_geodata(location_name: str, db_path=DB_PATH):
+    """
+    Return a list of coordinates, location's geodata.
+    """
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Query to get coordinates for a specific location
+            query = "SELECT coordinates FROM location_details WHERE location_name = ?"
+            cursor.execute(query, (location_name.strip(),))
+            
+            result = cursor.fetchone()
+            if result:
+                coordinates = json.loads(result['coordinates'])
+                return {location_name: coordinates}
+            
     except Exception as e:
         print(f"Error: {e}")
     
     return None  # Return None if location is not found
 
 
+def get_all_locations_geodata(db_path=DB_PATH):
+    """
+    Return: list of dicts, each location has 1 dict, with key as location name and value as location coordinates.
+    """
+    result = []
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Query to get all locations and their coordinates
+            query = "SELECT location_name, coordinates FROM location_details"
+            cursor.execute(query)
+            
+            rows = cursor.fetchall()
+            for row in rows:
+                location_name = row['location_name']
+                coordinates = json.loads(row['coordinates'])
+                result.append({location_name: coordinates})
+                
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    return result
+
+# Theme Layers
+
+
+def get_all_themes(access_token):    
+    url = "https://www.onemap.gov.sg/api/public/themesvc/getAllThemesInfo?moreInfo=Y"
+        
+    headers = {"Authorization": access_token}
+        
+    response = requests.request("GET", url, headers=headers)
+        
+    print(response.text)
+
+
 # For testing
 if __name__ == "__main__":
-    access_token = get_access_token()
-    save_location_geodata_to_csv(access_token)
-    print(get_location_geodata('BEDOK'))
+    # access_token = get_access_token()
+    # get_all_themes(access_token)
+
+    # save_to_db()
+
+    # save_location_geodata_to_csv(access_token)
+    print(get_location_geodata('BUKIT TIMAH'))

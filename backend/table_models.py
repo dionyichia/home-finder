@@ -58,6 +58,7 @@ def create_database():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS location_details (
         location_name TEXT PRIMARY KEY,
+        coordinates TEXT, 
         retail_prices TEXT, 
         crime TEXT,
         FOREIGN KEY (location_name) REFERENCES locations (location_name)

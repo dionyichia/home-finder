@@ -1,5 +1,7 @@
-from api import fetch_crimes
+from api import fetch_crimes, fetch_districts
 from controllers import Locations, Plotter, Scoring
+import os
+import sqlite3
 
 class LocationsDetailController:
     """
@@ -7,6 +9,10 @@ class LocationsDetailController:
     Eliminates the need for a specific LocationsDetailsDB
 
     """
+    @staticmethod
+    def get_db_path(db_name=':memory:'):
+        """Returns the database path based on the provided name"""
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
 
     @staticmethod
     def get_location_details(location_name: str) -> dict:
@@ -57,3 +63,12 @@ class LocationsDetailController:
             'malls': malls,
             'score': location_score,
         }
+    
+    @staticmethod
+    def get_location_coordinates(location_name: str, db_name='app.db') -> list:
+        """
+        SQL Query for DB data for single location
+
+        Return: 1 Dict of location or None if not found, key=location_name, value=coordinates.
+        """
+        return fetch_districts.get_location_geodata(location_name=location_name)
