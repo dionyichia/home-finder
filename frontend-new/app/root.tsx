@@ -6,9 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
-import { useEffect } from "react";
-
+import { useEffect, useState } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -28,6 +26,17 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+// Client-side only component to avoid hydration issues with Mapbox
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return mounted ? <>{children}</> : null;
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.body.classList.add('vsc-initialized');
@@ -42,7 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-          {children}
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -52,13 +61,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <MapProvider>
-      <div className="bg-purple-200 text-gray-700 absolute top-0 left-0 py-2 px-3 z-1">
-        <NavBar/>
-      </div>
-      <Outlet />
-    </MapProvider>
-    );
+    <ClientOnly>
+      <MapProvider>
+        <div className="bg-purple-200 text-gray-700 absolute top-0 left-0 py-2 px-3 z-1">
+          <NavBar/>
+        </div>
+        <Outlet />
+      </MapProvider>
+    </ClientOnly>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

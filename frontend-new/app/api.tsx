@@ -1,22 +1,39 @@
 const API_BASE_URL = 'http://127.0.0.1:5000';
 
-export interface Location {
-  // Define your location type here based on your backend data structure
-  name: string;
-  // Add other properties as needed
+export interface LocationGeoData {
+  location_name: string;
+  geodata: any[]; 
+}
+
+export interface ScoredLocation {
+  location: Record<string, any>; 
+  score: number;
 }
 
 export const api = {
   /**
+   * Get all locations geodata
+   */
+  getAllLocationsGeodata: async (): Promise<LocationGeoData[]> => {
+    const response = await fetch(`${API_BASE_URL}/get_all_coords`);
+
+    if (!response.ok) {
+      throw new Error(`Error fetching locations geodata: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  /**
    * Get all locations sorted by a specific category
    */
-  getSortedLocations: async (sortBy: string): Promise<Location[]> => {
+  getSortedLocations: async (sortBy: string): Promise<ScoredLocation[]> => {
     const response = await fetch(`${API_BASE_URL}/sort?sort_by=${sortBy}`);
-    
+
     if (!response.ok) {
       throw new Error(`Error fetching sorted locations: ${response.statusText}`);
     }
-    
+
     return response.json();
   },
   
