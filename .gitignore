@@ -35,3 +35,6 @@ dist/
 # Ignore environment files
 .env
 *.env
+
+# Ignore testing folder
+tagging_planning_area
