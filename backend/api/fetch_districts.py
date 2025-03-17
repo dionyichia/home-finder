@@ -10,11 +10,8 @@ import csv
 from dotenv import load_dotenv
 
 CACHE_DIR = "../api_cache"
-CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "location_coordinates.csv")
+CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "locations_coordinates.csv")
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app.db')
-
-
-
 
 def get_access_token():
     load_dotenv()
@@ -193,15 +190,40 @@ def get_all_locations_geodata(db_path=DB_PATH):
 
 # Theme Layers
 
+import json
 
 def get_all_themes(access_token):    
     url = "https://www.onemap.gov.sg/api/public/themesvc/getAllThemesInfo?moreInfo=Y"
-        
+    
     headers = {"Authorization": access_token}
+    
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error fetching data: {response.status_code}")
+        return
+    
+    data = response.json()  # Convert response to JSON
+
+    print(json.dumps(data, indent=4))  # Pretty-print response for debugging
+
+    # Extract required fields and write to CSV
+    themes = data.get("Theme_Names", [])  # Extract "Theme_Names" safely
+
+    if not themes:
+        print("No themes found.")
+        return
+
+    file_path = "themes.csv"
+    with open(file_path, mode="w", newline="") as file:
+        print("Opened CSV file")
+        writer = csv.writer(file)
+        writer.writerow(["Theme Name"])  # Header row
         
-    response = requests.request("GET", url, headers=headers)
-        
-    print(response.text)
+        for theme in themes:
+            writer.writerow([theme])  # Write each theme as a row
+
+    print(f"Saved {len(themes)} themes to {file_path}")
 
 
 # For testing
