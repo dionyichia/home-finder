@@ -87,13 +87,17 @@ class LocationsController:
             print(f"Error occurred: {e}")
             return None
         
-    def get_location_geojson(location_name: str):
-        return 
+    def get_all_locations_geojson():
+        """
+        Return: List of dicts, each location 1 dict
+        """
+        return fetch_districts.get_all_locations_geodata()
+
 
     @staticmethod
     def sort_by_category(sorting_category, user_id=None):
         """
-        Return: A tuple, (ranked locations, their score)
+        Return: A list of tuples, (ranked location, their score)
         """
 
         locations = LocationsController.get_locations()

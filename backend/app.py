@@ -9,13 +9,22 @@ CORS(app)
 App.py only handles handle HTTP logic, aligns with Single Responsibiltiy Principle
 """
 
-# Explore route
+# Explore route to get map geodata information
+@app.route('/get_all_coords', methods=['GET'])
+def get_all_coords():
+    """
+    Return: Jsonified List of list of dicts, {location name: their geodata}
+    """
+    ranked_locations = Locations.LocationsController.get_all_locations_geojson()
+
+    # Return list of ranked locations
+    return jsonify(ranked_locations)
 
 # Route to get and display all location information
 @app.route('/sort', methods=['GET'])
 def get_all_locations():
     """
-    Return: Jsonified List with dicts each containing a location's details
+    Return: Jsonified List of list of tuples, (ranked location, their score)
     """
     # Get data sent in request
     sorting_category = request.args.get('sort_by', default=None)
@@ -114,10 +123,10 @@ def update_user_favourites():
 
     pass    
 
-@app.route('/update_user_favourites', methods=['POST'])
-def update_user_favourites():
+# @app.route('/update_user_favourites', methods=['POST'])
+# def update_user_favourites():
 
-    pass 
+#     pass 
 
 # Set notifications route 
 @app.route('/update_notifcation_status', methods=['POST'])

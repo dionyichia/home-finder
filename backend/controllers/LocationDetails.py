@@ -1,4 +1,4 @@
-from api import fetch_crimes, fetch_districts
+from api import fetch_crimes, fetch_districts, fetch_malls, fetch_resale
 from controllers import Locations, Plotter, Scoring
 import os
 import sqlite3
@@ -41,8 +41,9 @@ class LocationsDetailController:
         schools = location.get('schools', 0)
         # api.fetch_district.fetch_all_schools_by_location() , havent do
 
-        # Get malls /and distance to nearest schools
-        malls = location.get('malls', 0)
+        # Get num malls /and distance to nearest malls
+        malls = fetch_malls.get_all_malls_by_location(location_name=location_name)
+        location['malls'] = malls
 
         # Score Location according to preferences
         all_locations = Locations.LocationsController.get_locations()
