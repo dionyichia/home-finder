@@ -120,3 +120,7 @@ def generate_resale_price_summary(location: str):
     }
     
     return summary
+
+if __name__ == "__main__":
+    fetch_data_from_api()
+    

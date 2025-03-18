@@ -13,6 +13,65 @@ CACHE_DIR = "../api_cache"
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "locations_coordinates.csv")
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app.db')
 
+# Ignore this i shifted it here to resolve circular import error
+npc_to_district = {
+    "Ang Mo Kio": "Ang Mo Kio South NPC",
+    "Bedok": "Bedok NPC",
+    "Bishan": "Bishan NPC",
+    "Boon Lay": "Jurong West NPC",
+    "Bukit Batok": "Bukit Batok NPC",
+    "Bukit Merah": "Bukit Merah West NPC",
+    "Bukit Panjang": "Bukit Panjang NPC",
+    "Bukit Timah": "Bukit Timah NPC",
+    "Central Water Catchment": "Woodlands West NPC",
+    "Changi": "Changi NPC",
+    "Changi Bay": "Changi NPC",  # Added
+    "Choa Chu Kang": "Choa Chu Kang NPC",
+    "Clementi": "Clementi NPC",
+    "Downtown Core": "Marina Bay NPC",
+    "Geylang": "Geylang NPC",
+    "Hougang": "Hougang NPC",
+    "Jurong East": "Jurong East NPC",
+    "Jurong West": "Jurong West NPC",
+    "Kallang": "Kampong Java NPC",
+    "Lim Chu Kang": "Nanyang NPC",
+    "Mandai": "Woodlands East NPC",
+    "Marine Parade": "Marine Parade NPC",
+    "Marina East": "Marina Bay NPC",  # Added
+    "Marina South": "Marina Bay NPC",  # Added
+    "Museum": "Rochor NPC",
+    "Newton": "Orchard NPC",
+    "Novena": "Toa Payoh NPC",
+    "Orchard": "Orchard NPC",
+    "Outram": "Bukit Merah East NPC",
+    "Pasir Ris": "Pasir Ris NPC",
+    "Paya Lebar": "Hougang NPC",
+    "Pioneer": "Nanyang NPC",
+    "Punggol": "Punggol NPC",
+    "Queenstown": "Queenstown NPC",
+    "River Valley": "Orchard NPC",
+    "Rochor": "Rochor NPC",
+    "Seletar": "Sengkang NPC",
+    "Sembawang": "Sembawang NPC",
+    "Sengkang": "Sengkang NPC",
+    "Serangoon": "Serangoon NPC",
+    "Simpang": "Yishun North NPC",
+    "Singapore River": "Marina Bay NPC",
+    "Southern Islands": "Marina Bay NPC",
+    "Straits View": "Marina Bay NPC",  # Added
+    "Sungei Kadut": "Woodlands West NPC",
+    "Tampines": "Tampines NPC",
+    "Tanglin": "Bukit Timah NPC",
+    "Tengah": "Choa Chu Kang NPC",
+    "Toa Payoh": "Toa Payoh NPC",
+    "Tuas": "Nanyang NPC",
+    "Western Islands": "Nanyang NPC",
+    "Western Water Catchment": "Nanyang NPC",
+    "Woodlands": "Woodlands West NPC",
+    "Yishun": "Yishun South NPC",
+    "North-Eastern Islands": "Pasir Ris NPC"
+}
+
 def get_access_token():
     load_dotenv()
                 
@@ -42,9 +101,9 @@ def save_location_geodata_to_csv(access_token, csv_filename=CACHE_LOCATION_COORD
 
     results = data['SearchResults']
 
-    return save_to_csv(csv_filename, results)
+    return save_to_csv(results, csv_filename=csv_filename)
 
-def save_to_csv(csv_filename, data):
+def save_to_csv(data, csv_filename=CACHE_LOCATION_COORDINATES_FILE):
     try:
         # Extract required fields and write to CSV
         with open(csv_filename, mode="w", newline="") as file:
@@ -56,6 +115,16 @@ def save_to_csv(csv_filename, data):
 
             for district in data:
                 planning_area = district.get("pln_area_n")
+
+                # Find matching key in npc_to_district (case-insensitive) This is a bandaid fix resolve the mismatch in capitalisation error in the location_name
+                location_name_lower = planning_area.lower()
+                matching_key = None
+                for key in npc_to_district:
+                    if key.lower() == location_name_lower:
+                        matching_key = key
+                        break
+                planning_area = matching_key
+
                 geojson_str = district.get("geojson")
                 
                 # Parse geojson string into a Python dictionary
@@ -77,7 +146,40 @@ def save_to_csv(csv_filename, data):
         print(f"Error: {e}")
         return False
     
-def save_to_db(db_path=DB_PATH):
+def save_location_name_to_db(db_path=DB_PATH):
+    """
+    Save all unique locations to location_name column in locations in app.db.
+    """
+    locations_geodata = get_all_location_geodata_from_csv()
+    
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            # Set row_factory to get dictionary instead of tuple
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            for location_geodata in locations_geodata:
+                # Each location_geodata is a dict with one item where key is location name
+                for location_name in location_geodata.keys():
+                    # Check if location_name already exists
+                    cursor.execute("SELECT COUNT(*) FROM locations WHERE location_name = ?", (location_name,))
+                    exists = cursor.fetchone()[0] > 0
+                    
+                    if not exists:
+                        # Insert only if it doesn't exist
+                        query = "INSERT INTO locations (location_name) VALUES (?)"
+                        cursor.execute(query, (location_name,))
+            
+            # Commit changes
+            conn.commit()
+            return True
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return False
+    
+def save_location_coords_to_db(db_path=DB_PATH):
     """
     Save all locations geodata to coordinates column in location_details in app.db.
     Update existing records or insert new ones if location_name doesn't exist.
@@ -228,10 +330,13 @@ def get_all_themes(access_token):
 
 # For testing
 if __name__ == "__main__":
-    # access_token = get_access_token()
-    # get_all_themes(access_token)
+    access_token = get_access_token()
+    get_all_themes(access_token=access_token)
+    # save_location_geodata_to_csv(access_token=access_token)
+    # # get_all_themes(access_token)
 
-    # save_to_db()
+    # # save_to_location_coords_to_db()
+    # save_location_name_to_db()
 
     # save_location_geodata_to_csv(access_token)
-    print(get_location_geodata('BUKIT TIMAH'))
+    # print(get_location_geodata('BUKIT TIMAH'))

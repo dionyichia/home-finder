@@ -1,7 +1,8 @@
 import requests
+import sqlite3
 import os
 import csv
-from fetch_districts import get_access_token
+from fetch_districts import get_access_token, DB_PATH
 from collections import defaultdict
 
 # Define API URL
@@ -65,6 +66,40 @@ def save_to_csv():
     
     print("Now you need to run a script to tag each school to a planning area")
 
+
+def save_num_schools_to_db(db_path=DB_PATH):
+    """
+    Save number of schools for each location in num_schools column in locations in app.db.
+    """
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            # Set row_factory to get dictionary instead of tuple
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get all location names from the locations table
+            cursor.execute("SELECT location_name FROM locations")
+            locations = cursor.fetchall()
+            
+            for location in locations:
+                location_name = location['location_name']
+                
+                # Get number of schools for this location
+                num_schools = get_num_schools_by_district(location_name=location_name)
+                
+                # Update the locations table with the number of schools
+                query = "UPDATE locations SET num_schools = ? WHERE location_name = ?"
+                cursor.execute(query, (num_schools, location_name))
+            
+            # Commit changes
+            conn.commit()
+            return True
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return False
+
 def load_schools_data():
     """Load schools data from the CSV file."""
     schools_data = []
@@ -83,7 +118,7 @@ def get_all_schools_by_district(location_name: str):
         location_name: Name of the planning area/district
         
     Returns:
-        List of schools in the specified district
+        List of schools in the specified district.
     """
     schools_data = load_schools_data()
     schools_in_district = []
@@ -137,23 +172,24 @@ if __name__ == "__main__":
     
     # Fetch and save data from API
     # save_to_csv()
+    # save_num_schools_to_db()
     
     # Example: Get all schools in Yishun
-    yishun_schools = get_all_schools_by_district("Yishun")
-    print(f"Schools in Yishun ({len(yishun_schools)}):")
+    yishun_schools = get_all_schools_by_district("Bedok")
+    print(f"Schools in Bedok ({len(yishun_schools)}):")
     for school in yishun_schools:
         print(f"- {school['School Name']}")
     
-    # Example: Get number of schools by district
-    serangoon_count = get_num_schools_by_district("Serangoon")
-    print(f"Number of schools in Serangoon: {serangoon_count}")
+    # # Example: Get number of schools by district
+    # serangoon_count = get_num_schools_by_district("Serangoon")
+    # print(f"Number of schools in Serangoon: {serangoon_count}")
     
-    # Example: List all districts
-    print("\nAll districts:")
-    for district in list_all_districts():
-        print(f"- {district}")
+    # # Example: List all districts
+    # print("\nAll districts:")
+    # for district in list_all_districts():
+    #     print(f"- {district}")
     
-    # Example: Get statistics about schools per district
-    print("\nSchools per district:")
-    for district, count in get_district_statistics().items():
-        print(f"{district}: {count} schools")
+    # # Example: Get statistics about schools per district
+    # print("\nSchools per district:")
+    # for district, count in get_district_statistics().items():
+    #     print(f"{district}: {count} schools")

@@ -1,6 +1,9 @@
 import requests
 import os
 import csv
+import sqlite3
+
+from fetch_districts import DB_PATH, npc_to_district
 
 # Constants
 DATASET_ID = "d_ca0b908cf06a267ca06acbd5feb4465c"
@@ -9,61 +12,6 @@ CACHE_DIR = "../api_cache"
 CACHE_CRIME_DATA_FILE = os.path.join(CACHE_DIR, "crimes.csv")
 CACHE_CRIME_RATE_FILE = os.path.join(CACHE_DIR, "crimes_by_npc.csv")
 CACHE_POPULATION_SIZE_FILE = os.path.join(CACHE_DIR, "population_size.csv")
-
-LOCATIONS_DETAILS_DB = None
-
-npc_to_district = {
-    "Ang Mo Kio": "Ang Mo Kio South NPC",
-    "Bedok": "Bedok NPC",
-    "Bishan": "Bishan NPC",
-    "Boon Lay": "Jurong West NPC",
-    "Bukit Batok": "Bukit Batok NPC",
-    "Bukit Merah": "Bukit Merah West NPC",
-    "Bukit Panjang": "Bukit Panjang NPC",
-    "Bukit Timah": "Bukit Timah NPC",
-    "Central Water Catchment": "Woodlands West NPC",
-    "Changi": "Changi NPC",
-    "Choa Chu Kang": "Choa Chu Kang NPC",
-    "Clementi": "Clementi NPC",
-    "Downtown Core": "Marina Bay NPC",
-    "Geylang": "Geylang NPC",
-    "Hougang": "Hougang NPC",
-    "Jurong East": "Jurong East NPC",
-    "Jurong West": "Jurong West NPC",
-    "Kallang": "Kampong Java NPC",
-    "Lim Chu Kang": "Nanyang NPC",
-    "Mandai": "Woodlands East NPC",
-    "Marine Parade": "Marine Parade NPC",
-    "Museum": "Rochor NPC",
-    "Newton": "Orchard NPC",
-    "Novena": "Toa Payoh NPC",
-    "Orchard": "Orchard NPC",
-    "Outram": "Bukit Merah East NPC",
-    "Pasir Ris": "Pasir Ris NPC",
-    "Paya Lebar": "Hougang NPC",
-    "Pioneer": "Nanyang NPC",
-    "Punggol": "Punggol NPC",
-    "Queenstown": "Queenstown NPC",
-    "River Valley": "Orchard NPC",
-    "Rochor": "Rochor NPC",
-    "Seletar": "Sengkang NPC",
-    "Sembawang": "Sembawang NPC",
-    "Sengkang": "Sengkang NPC",
-    "Serangoon": "Serangoon NPC",
-    "Simpang": "Yishun North NPC",
-    "Singapore River": "Marina Bay NPC",
-    "Southern Islands": "Marina Bay NPC",
-    "Sungei Kadut": "Woodlands West NPC",
-    "Tampines": "Tampines NPC",
-    "Tanglin": "Bukit Timah NPC",
-    "Tengah": "Choa Chu Kang NPC",
-    "Toa Payoh": "Toa Payoh NPC",
-    "Tuas": "Nanyang NPC",
-    "Western Islands": "Nanyang NPC",
-    "Western Water Catchment": "Nanyang NPC",
-    "Woodlands": "Woodlands West NPC",
-    "Yishun": "Yishun South NPC"
-}
 
 def fetch_data_from_api():
     """
@@ -138,15 +86,20 @@ def load_crime_data_from_cache():
             
             # Create a dictionary for this row
             row_dict = {}
+
             for i, col_name in enumerate(header):
                 # Convert year values to integers
                 if col_name.strip().isdigit():
-                    row_dict[col_name] = int(values[i])
+                    if values[i] == 'na':
+                        row_dict[col_name] = 0
+                    else:
+                        row_dict[col_name] = int(values[i])
                 else:
                     row_dict[col_name] = values[i]
                     
             crime_data.append(row_dict)
-            
+
+
     return crime_data
 
 def fetch_all_crime_rate():
@@ -201,21 +154,107 @@ def fetch_crime_rate_by_location(location_name: str):
     Fetch crime rate filtered by location.
     """
     crime_rates = fetch_all_crime_rate()
+
     population_size_by_district = load_population_data_from_cache()
 
-    district_pop_size = population_size_by_district.get(location_name)
+    # Find matching key in npc_to_district (case-insensitive)
+    location_name_lower = location_name.lower()
+    matching_key = None
+    for key in npc_to_district:
+        if key.lower() == location_name_lower:
+            matching_key = key
+            break
 
-    location_npc = npc_to_district[location_name]
+    district_pop_size = population_size_by_district.get(matching_key)
+
+    print("district_pop_size ", district_pop_size)
+    print('location_name ', location_name)
+    
+    location_npc = npc_to_district[matching_key]
+    print("location_npc:", location_npc)
 
     for crime_rate_by_npc in crime_rates:
         npc = crime_rate_by_npc["NPC"]
         if npc == location_npc:
 
             #CALCULATE CRIME RATE, number of crime per million people
+            if district_pop_size == 0:
+                return 0
+
             crime_rate = ( crime_rate_by_npc["2023"] / district_pop_size ) * 1000000
             return crime_rate
 
-    return '0'
+    return 0
+
+def save_crime_rate_to_db(db_path=DB_PATH):
+    """
+    Save location crime rate for each location in crime_rate column in locations table in app.db.
+    """
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            # Set row_factory to get dictionary instead of tuple
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get all location names from the locations table
+            cursor.execute("SELECT location_name FROM locations")
+            locations = cursor.fetchall()
+            
+            for location in locations:
+                location_name = location['location_name']
+                print(location_name)
+                
+                # Get crime rate for this location
+                crime_rate = fetch_crime_rate_by_location(location_name=location_name)
+
+                print(crime_rate, type(crime_rate))
+                
+                # Update the locations table with the crime rate
+                query = "UPDATE locations SET crime_rate = ? WHERE location_name = ?"
+                cursor.execute(query, (crime_rate, location_name))
+            
+            # Commit changes
+            conn.commit()
+            return True
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return False
+
+def save_crimes_to_db(db_path=DB_PATH):
+    """
+    Save location crimes for e
+    ach location in crimes column in location_details table in app.db.
+    """
+    try:
+        # Establish a database connection
+        with sqlite3.connect(db_path) as conn:
+            # Set row_factory to get dictionary instead of tuple
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get all location names from the locations table
+            cursor.execute("SELECT location_name FROM location_details")
+            locations = cursor.fetchall()
+            
+            for location in locations:
+                location_name = location['location_name']
+                
+                # Get all crimes for this location
+                crimes = fetch_all_crimes_by_location(location=location_name)
+                
+                # Update the location_details table with the crimes
+                query = "UPDATE location_details SET crimes = ? WHERE location_name = ?"
+                cursor.execute(query, (crimes, location_name))
+            
+            # Commit changes
+            conn.commit()
+            return True
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return False
 
 def csv_to_db():
     """
@@ -225,3 +264,10 @@ def csv_to_db():
     LocationDetailsDB should have a coloumn for crime_data
     """
     pass
+
+if __name__ == "__main__":
+    # Uncomment the function you want to run
+    
+    # Fetch and save data from API
+    # save_to_csv()
+    save_crime_rate_to_db()
