@@ -2,6 +2,7 @@ import requests
 import os
 import csv
 import sqlite3
+import json
 
 from fetch_districts import DB_PATH, npc_to_district
 
@@ -32,11 +33,11 @@ def fetch_data_from_api():
     else:
         raise Exception(f"Failed to fetch data from API. Status code: {response.status_code}")
 
-def load_crime_data_from_cache():
+def load_crime_data_from_cache(file=CACHE_CRIME_DATA_FILE):
     """
     Load crime data from the cached CSV file.
     """
-    with open(CACHE_CRIME_DATA_FILE, mode="r", encoding="utf-8") as file:
+    with open(file, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         return list(reader)
 
@@ -49,14 +50,7 @@ def fetch_all_crimes():
     else:
         return fetch_data_from_api()
 
-def fetch_all_crimes_by_location(location: str):
-    """
-    Fetch crimes filtered by location.
-    """
-    crimes = fetch_all_crimes()
-    return [crime for crime in crimes if crime.get("Planning Area") == location]
-
-def load_crime_data_from_cache():
+def load_crime_rate_from_cache():
     """
     Load crime rate from the CSV file and stop at an empty line.
     
@@ -222,10 +216,46 @@ def save_crime_rate_to_db(db_path=DB_PATH):
         print(f"Error occurred: {e}")
         return False
 
+def fetch_all_crimes_by_location(location: str):
+    """
+    Fetch crimes filtered by location.
+    """
+    crimes = fetch_all_crimes()
+    print(f"Total crimes in dataset: {len(crimes)}")
+    
+    # Check if Planning Area is correctly formatted in the crimes data
+    if crimes and 'Planning Area' not in crimes[0]:
+        # Check for case sensitivity issues
+        keys = list(crimes[0].keys())
+        print(f"Available keys in crime data: {keys}")
+        # Try to find the correct key
+        planning_area_key = next((k for k in keys if k.lower() == 'planning area'), None)
+        if planning_area_key:
+            print(f"Found Planning Area as: {planning_area_key}")
+            # Filter using the correct key
+            return [crime for crime in crimes if crime.get(planning_area_key) == location]
+        else:
+            print("Planning Area column not found in crime data!")
+            return []
+    
+    # Process each crime and check if it matches the location
+    matching_crimes = []
+    for crime in crimes:
+        crime_location = crime.get("Planning Area", "")
+        # Print sample data to verify structure
+        if len(matching_crimes) == 0 and crime_location:
+            print(f"Sample location in data: '{crime_location}'")
+            print(f"Looking for location: '{location}'")
+        
+        if crime_location == location:
+            matching_crimes.append(crime)
+            
+    print(f"Found {len(matching_crimes)} crimes matching location: {location}")
+    return matching_crimes
+
 def save_crimes_to_db(db_path=DB_PATH):
     """
-    Save location crimes for e
-    ach location in crimes column in location_details table in app.db.
+    Save location crimes for each location in crimes column in location_details table in app.db.
     """
     try:
         # Establish a database connection
@@ -234,26 +264,78 @@ def save_crimes_to_db(db_path=DB_PATH):
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
+            # Verify database tables and columns
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='location_details'")
+            if not cursor.fetchone():
+                print("Error: location_details table does not exist")
+                return False
+                
             # Get all location names from the locations table
             cursor.execute("SELECT location_name FROM location_details")
             locations = cursor.fetchall()
             
+            # Print current values for debugging
+            cursor.execute("SELECT location_name, crimes FROM location_details LIMIT 3")
+            sample_rows = cursor.fetchall()
+            print("Current sample data in database:")
+            for row in sample_rows:
+                print(f"  {row['location_name']}: {row['crimes'][:30]}...")
+            
+            # Debug flag to track if any changes were made
+            changes_made = False
+            
             for location in locations:
                 location_name = location['location_name']
+                print(f"\nProcessing location: {location_name}")
                 
                 # Get all crimes for this location
                 crimes = fetch_all_crimes_by_location(location=location_name)
                 
+                # If no crimes found, continue to next location
+                if not crimes:
+                    print(f"No crimes found for location: {location_name}")
+                    continue
+                
+                # Convert to JSON string
+                json_crimes = json.dumps(crimes)
+                print(f"Saving {len(crimes)} crimes for location: {location_name}")
+                print(f"JSON length: {len(json_crimes)} characters")
+                
                 # Update the location_details table with the crimes
                 query = "UPDATE location_details SET crimes = ? WHERE location_name = ?"
-                cursor.execute(query, (crimes, location_name))
+                cursor.execute(query, (json_crimes, location_name))
+                
+                # Check if the update actually changed anything
+                if cursor.rowcount > 0:
+                    print(f"Updated {cursor.rowcount} rows for {location_name}")
+                    changes_made = True
+                else:
+                    print(f"No rows updated for {location_name}")
             
-            # Commit changes
-            conn.commit()
+            # Verify that changes were made
+            if changes_made:
+                # Commit changes
+                conn.commit()
+                print("Changes committed to database")
+                
+                # Verify changes were saved
+                cursor.execute("SELECT location_name, crimes FROM location_details WHERE json_array_length(crimes) > 0 LIMIT 3")
+                updated_rows = cursor.fetchall()
+                if updated_rows:
+                    print("Successfully updated rows in database:")
+                    for row in updated_rows:
+                        print(f"  {row['location_name']}: {row['crimes'][:30]}...")
+                else:
+                    print("No rows with non-empty crimes array found after update!")
+            else:
+                print("No changes made to database")
+            
             return True
     
     except Exception as e:
         print(f"Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def csv_to_db():
@@ -270,4 +352,5 @@ if __name__ == "__main__":
     
     # Fetch and save data from API
     # save_to_csv()
-    save_crime_rate_to_db()
+    # save_crime_rate_to_db()
+    save_crimes_to_db()
