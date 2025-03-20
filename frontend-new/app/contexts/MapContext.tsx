@@ -95,7 +95,8 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
       try {
         setIsLoading(true);
         const data = await api.getAllLocationsGeodata();
-        setLocationsGeodata(data);
+        // setLocationsGeodata(data);
+        console.log("getting data from backend")
       } catch (error) {
         console.error('Error fetching location data:', error);
       } finally {
@@ -156,7 +157,7 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
       return;
     }
 
-    const parsedMapState = loadFromSessionStorage()
+    const parsedMapState = loadFromSessionStorage() || mapState; 
 
     try {
 

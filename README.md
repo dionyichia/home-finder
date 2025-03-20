@@ -78,3 +78,59 @@ Areas with no direct NPCs assigned:
 
 - Areas like Central Water Catchment and Western Water Catchment are mapped to the closest NPCs in Woodlands and Nanyang, respectively.
 
+#### Resale Prices
+
+Singapore's 55 planning areas can be categorized based on the presence of Housing and Development Board (HDB) flats. HDB flats are prevalent in residential towns, while certain areas, primarily industrial zones, nature reserves, or offshore islands, do not have HDB developments.
+
+Planning Areas with HDB Flats:
+
+- Ang Mo Kio: A mature residential town with a significant number of HDB flats.
+- Bedok: One of Singapore's largest residential areas, predominantly HDB flats.
+- Bishan: Known for its central location and numerous HDB estates.
+- Bukit Batok: Features a mix of HDB flats and private housing.
+- Bukit Merah: An established area with extensive HDB developments.
+- Bukit Panjang: A residential town with a substantial number of HDB flats.
+- Bukit Timah: Primarily private housing, but includes some HDB flats.
+- Choa Chu Kang: A residential area with numerous HDB estates.
+- Clementi: Known for its HDB flats and proximity to educational institutions.
+- Geylang: Contains a mix of private and public housing, including HDB flats.
+- Hougang: A large residential town with extensive HDB developments.
+- Jurong East: Features HDB flats alongside commercial developments.
+- Jurong West: One of the largest residential towns with numerous HDB estates.
+- Kallang: Includes HDB flats, especially in areas like Kallang/Whampoa. 
+- Marine Parade: Features HDB flats with sea views.
+- Pasir Ris: A residential town with a significant number of HDB flats.
+- Punggol: A newer residential area with many HDB developments.
+- Queenstown: Singapore's first satellite town with numerous HDB flats.
+- Sembawang: Contains several HDB estates.
+- Sengkang: A residential town with extensive HDB developments.
+- Serangoon: Features a mix of private and public housing, including HDB flats.
+- Tampines: One of Singapore's largest residential towns with numerous HDB estates. 
+- Toa Payoh: A mature town with a significant number of HDB flats.
+- Woodlands: A major residential area with extensive HDB developments.
+- Yishun: Known for its numerous HDB estates.
+
+Planning Areas without HDB Flats:
+
+- Central Water Catchment: Comprises nature reserves and reservoirs; no residential developments.
+- Lim Chu Kang: Primarily an agricultural area with minimal residential housing.
+- Mandai: Known for wildlife reserves; lacks HDB developments.
+- Marina East: Focused on recreational spaces; no HDB flats.
+- Marina South: Designated for commercial and recreational use; no HDB developments.
+- Museum: Contains cultural institutions; lacks residential housing.
+- Newton: Primarily private housing and commercial areas; no HDB flats.
+- North-Eastern Islands: Comprises offshore islands with no residential developments.
+- Orchard: A commercial district without HDB flats.
+- Outram: Contains commercial and healthcare facilities; minimal HDB housing.
+- Paya Lebar: Focused on commercial developments; lacks HDB flats.
+- Pioneer: An industrial area without residential housing.
+- Rochor: Contains commercial and educational institutions; minimal HDB housing.
+- Seletar: Known for aerospace industries; lacks HDB developments.
+- Simpang: Largely undeveloped with no residential housing.
+- Southern Islands: Comprises offshore islands with no HDB flats.
+- Straits View: Designated for commercial use; no residential developments.
+- Sungei Kadut: An industrial area without HDB housing.
+- Tengah: Currently under development; future HDB town. 
+- Tuas: An industrial zone with no residential housing.
+- Western Islands: Comprises offshore islands with no residential developments.
+- Western Water Catchment: Contains water catchment areas; no residential housing.
