@@ -47,8 +47,10 @@ def search_for_location():
 
     if not location_name:
         return jsonify({"message": "Missing location name!"}), 400
+    
+    print("Searching for:", location_name.strip())
 
-    return jsonify(LocationDetails.LocationsDetailController.get_location_details(location_name=location_name))
+    return jsonify(LocationDetails.LocationsDetailController.get_location_details(location_name=location_name.strip()))
 
 # Register Route
 @app.route('/register', methods=['POST'])
@@ -120,12 +122,10 @@ def remove_user():
 # Set favourites route
 @app.route('/get_user_favourites', methods=['POST'])
 def update_user_favourites():
-
     pass    
 
 # @app.route('/update_user_favourites', methods=['POST'])
 # def update_user_favourites():
-
 #     pass 
 
 # Set notifications route 

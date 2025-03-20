@@ -3,18 +3,28 @@ import os
 import csv
 import sqlite3
 import json
+import pathlib
 
-from .fetch_districts import DB_PATH, npc_to_district
+from .fetch_districts import DB_PATH, npc_to_district, CACHE_DIR
 
 # Constants
 DATASET_ID = "d_ca0b908cf06a267ca06acbd5feb4465c"
 API_URL = f"https://data.gov.sg/api/action/datastore_search?resource_id={DATASET_ID}"
-CACHE_DIR = "../api_cache"
+
 CACHE_CRIME_DATA_FILE = os.path.join(CACHE_DIR, "crimes.csv")
 CACHE_CRIME_RATE_FILE = os.path.join(CACHE_DIR, "crimes_by_npc.csv")
 CACHE_POPULATION_SIZE_FILE = os.path.join(CACHE_DIR, "population_size.csv")
 
-def fetch_data_from_api():
+
+def load_crime_data_from_cache(file=CACHE_CRIME_DATA_FILE):
+    """
+    Load crime data from the cached CSV file.
+    """
+    with open(file, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        return list(reader)
+
+def fetch_crime_data_from_api():
     """
     Fetch crime data from the API and save it to a CSV file.
     """
@@ -32,15 +42,7 @@ def fetch_data_from_api():
         return records
     else:
         raise Exception(f"Failed to fetch data from API. Status code: {response.status_code}")
-
-def load_crime_data_from_cache(file=CACHE_CRIME_DATA_FILE):
-    """
-    Load crime data from the cached CSV file.
-    """
-    with open(file, mode="r", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        return list(reader)
-
+    
 def fetch_all_crimes():
     """
     Fetch all crimes from cache or API.
@@ -48,17 +50,17 @@ def fetch_all_crimes():
     if os.path.exists(CACHE_CRIME_DATA_FILE):
         return load_crime_data_from_cache()
     else:
-        return fetch_data_from_api()
+        return fetch_crime_data_from_api()
 
 def load_crime_rate_from_cache():
     """
     Load crime rate from the CSV file and stop at an empty line.
     
     Args:
-        file_path (str): Path to the CSV file containing crime data
+        file_path (str): Path to the CSV file containing crime rate
         
     Returns:
-        list: List of dictionaries containing the crime data
+        list: List of dictionaries containing the crime rates
     """
     crime_data = []
     
@@ -101,7 +103,7 @@ def fetch_all_crime_rate():
     Fetch all crime rates from cache.
     """
     if os.path.exists(CACHE_CRIME_RATE_FILE):
-        return load_crime_data_from_cache()
+        return load_crime_rate_from_cache()
     else:
         return "Error: crimes_by_npc file not found."
     
@@ -242,10 +244,10 @@ def fetch_all_crimes_by_location(location: str):
     matching_crimes = []
     for crime in crimes:
         crime_location = crime.get("Planning Area", "")
-        # Print sample data to verify structure
-        if len(matching_crimes) == 0 and crime_location:
-            print(f"Sample location in data: '{crime_location}'")
-            print(f"Looking for location: '{location}'")
+        # # Print sample data to verify structure
+        # if len(matching_crimes) == 0 and crime_location:
+        #     print(f"Sample location in data: '{crime_location}'")
+        #     print(f"Looking for location: '{location}'")
         
         if crime_location == location:
             matching_crimes.append(crime)
@@ -337,15 +339,6 @@ def save_crimes_to_db(db_path=DB_PATH):
         import traceback
         traceback.print_exc()
         return False
-
-def csv_to_db():
-    """
-    Updates LocationDetailsDB and LocationsDB
-
-    LocationsDB should have a coloumn for crime_rate
-    LocationDetailsDB should have a coloumn for crime_data
-    """
-    pass
 
 if __name__ == "__main__":
     # Uncomment the function you want to run

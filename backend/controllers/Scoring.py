@@ -8,7 +8,7 @@ class ScoringController:
     """
     
     @staticmethod
-    def assign_score_n_rank_all_locations(locations: list, category='price', preferences=None):
+    def assign_score_n_rank_all_locations(locations: list, category='price', user_id=None):
         """
         Used for filter by category 
         Assigns a category score to a list of locations, re orders list of locations based on score.
@@ -28,11 +28,19 @@ class ScoringController:
         match category:
             # Return top 5 locations, scored by user's importance rank
             case 'score':
+                # If not registered, flag error
+                if not user_id:
+                    return Exception
+
+                # Get UserID
+                preferences = Preferences.get_user_preferences(user_id)
+
                 return ScoringController.calculate_score_for_preferences(locations=locations, preferences=preferences)
 
             # Default all other categories
             case _:
                 reranked_list = sorted(locations, key=itemgetter(category), reverse=True)
+                print(reranked_list)
                 return ScoringController.normalise_score_for_categories(ranked_locations=reranked_list, category=category)
     
     @staticmethod

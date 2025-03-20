@@ -4,11 +4,15 @@ import csv
 import os
 import time
 import sqlite3
+import pathlib
 from datetime import datetime
 
 from .fetch_districts import DB_PATH
 
-CACHE_DIR = "../api_cache"
+# Use absolute paths based on the location of the current script
+SCRIPT_DIR = pathlib.Path(__file__).parent.absolute()
+PROJECT_ROOT = SCRIPT_DIR.parent
+CACHE_DIR = os.path.join(PROJECT_ROOT, "api_cache")
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "mrt_coordinates.csv")
 
 def ensure_cache_dir():

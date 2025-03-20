@@ -2,6 +2,7 @@ import requests
 import sqlite3
 import os
 import csv
+import pathlib
 from .fetch_districts import get_access_token, DB_PATH
 from collections import defaultdict
 
@@ -12,8 +13,10 @@ BASE_URL = "https://www.onemap.gov.sg/api/public/themesvc/retrieveTheme"
 access_token = get_access_token()
 headers = {"Authorization": access_token}
 
-# Define cache directory and file
-CACHE_DIR = "../api_cache"
+# Use absolute paths based on the location of the current script
+SCRIPT_DIR = pathlib.Path(__file__).parent.absolute()
+PROJECT_ROOT = SCRIPT_DIR.parent
+CACHE_DIR = os.path.join(PROJECT_ROOT, "api_cache")
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "schools_coordinates.csv")
 
 def ensure_cache_dir():

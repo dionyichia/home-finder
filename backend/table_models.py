@@ -78,6 +78,19 @@ def create_database():
     )
     ''')
 
+    # Create the table to store location transactions, csv is too slow
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS resale_transactions (
+        _id TEXT PRIMARY KEY,
+        month TEXT,
+        town TEXT,
+        flat_type TEXT,
+        block TEXT,
+        street_name TEXT,
+        resale_price REAL,
+    )
+    ''')
+
     conn.commit()
     conn.close()
 

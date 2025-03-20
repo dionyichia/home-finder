@@ -4,11 +4,11 @@ import csv
 import os
 import time
 import sqlite3
+import pathlib
 from datetime import datetime
 
-from .fetch_districts import DB_PATH
+from .fetch_districts import DB_PATH, CACHE_DIR
 
-CACHE_DIR = "../api_cache"
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "malls_coordinates.csv")
 
 def ensure_cache_dir():

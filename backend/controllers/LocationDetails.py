@@ -1,5 +1,5 @@
 from api import fetch_crimes, fetch_districts, fetch_malls, fetch_resale, fetch_schools, fetch_transport
-from controllers import Locations, Plotter, Scoring
+from controllers import Locations, Scoring
 import os
 import sqlite3
 
@@ -49,10 +49,7 @@ class LocationsDetailController:
         location = Locations.LocationsController.get_location(location_name=location_name)
 
         # Get Location Details
-        past_resale_prices = location
-
-        # Get Price Trend Graph
-        price = Plotter.PricePlotterClass.plot_price_trend(past_resale_prices)
+        past_resale_prices = fetch_resale.get_all_transactions_by_location(location_name=location_name)
 
         # Get crimes and crime_rate
         crimes = fetch_crimes.fetch_all_crimes_by_location(location=location_name)
@@ -60,32 +57,31 @@ class LocationsDetailController:
 
         # Get nums schools /and distance to nearest schools
         schools = fetch_schools.get_all_schools_by_district(location_name=location_name)
-        # api.fetch_district.fetch_all_schools_by_location() , havent do
 
         # Get num malls /and distance to nearest malls
         malls = fetch_malls.get_all_malls_by_location(location_name=location_name)
 
-        # Get num transport /and distance to nearest malls
-        # Havent do
+        # Get num transport /and distance to nearest transport
+        transport = fetch_transport.get_all_stations_by_location(location_name=location_name)
 
         # Score Location according to preferences
         all_locations = Locations.LocationsController.get_locations()
 
-        # Check if user has registered !!!! If no default to price, if yes change to score
-
-        all_location_scored = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='score')
+        # If no category, default to price, if cat="score", user preferences will be pulled from DB through Preference Controller
+        all_location_scored = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='price')
         for location, score in all_location_scored:
             if location.get('name') == location_name:
                 location_score = score
                 break
 
         return {
-            'price': price,
+            'price': past_resale_prices,
             'crime': crimes,
             'crime_rate': crime_rate,
             'schools': schools,
             'malls': malls,
-            'score': location_score,
+            'transport': transport,
+            'score': 1, # There is a problem with scoring.
         }
     
     @staticmethod

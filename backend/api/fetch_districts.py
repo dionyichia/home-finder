@@ -7,11 +7,15 @@ import os
 import sqlite3
 import json
 import csv
+import pathlib
 from dotenv import load_dotenv
 
-CACHE_DIR = "../api_cache"
+# Use absolute paths based on the location of the current script
+SCRIPT_DIR = pathlib.Path(__file__).parent.absolute()
+PROJECT_ROOT = SCRIPT_DIR.parent
+CACHE_DIR = os.path.join(PROJECT_ROOT, "api_cache")
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "locations_coordinates.csv")
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app.db')
+DB_PATH = os.path.join(PROJECT_ROOT, 'app.db')
 
 # Ignore this i shifted it here to resolve circular import error
 npc_to_district = {
