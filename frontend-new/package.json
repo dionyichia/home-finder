@@ -12,11 +12,14 @@
     "@react-router/node": "^7.1.5",
     "@react-router/serve": "^7.1.5",
     "@types/mapbox-gl": "^3.4.1",
+    "chart.js": "^4.4.8",
     "isbot": "^5.1.17",
     "mapbox-gl": "^3.10.0",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
-    "react-router": "^7.1.5"
+    "react-router": "^7.1.5",
+    "react-router-dom": "^7.2.0"
   },
   "devDependencies": {
     "@react-router/dev": "^7.1.5",
