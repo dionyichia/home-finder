@@ -6,7 +6,7 @@ import time
 import sqlite3
 from datetime import datetime
 
-from fetch_districts import DB_PATH
+from .fetch_districts import DB_PATH
 
 CACHE_DIR = "../api_cache"
 CACHE_LOCATION_COORDINATES_FILE = os.path.join(CACHE_DIR, "malls_coordinates.csv")

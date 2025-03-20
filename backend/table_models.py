@@ -60,7 +60,7 @@ def create_database():
         location_name TEXT PRIMARY KEY,
         coordinates TEXT, 
         retail_prices TEXT, 
-        crime TEXT,
+        crimes TEXT,
         FOREIGN KEY (location_name) REFERENCES locations (location_name)
     )
     ''')

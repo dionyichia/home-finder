@@ -4,7 +4,7 @@ import csv
 import sqlite3
 import json
 
-from fetch_districts import DB_PATH, npc_to_district
+from .fetch_districts import DB_PATH, npc_to_district
 
 # Constants
 DATASET_ID = "d_ca0b908cf06a267ca06acbd5feb4465c"

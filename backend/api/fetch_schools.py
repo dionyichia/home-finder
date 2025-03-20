@@ -2,7 +2,7 @@ import requests
 import sqlite3
 import os
 import csv
-from fetch_districts import get_access_token, DB_PATH
+from .fetch_districts import get_access_token, DB_PATH
 from collections import defaultdict
 
 # Define API URL

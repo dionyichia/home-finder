@@ -4,7 +4,8 @@ import csv
 import sqlite3
 import json
 
-from fetch_districts import DB_PATH
+from .fetch_districts import DB_PATH
+
 # Constants
 DATASET_ID = "d_8b84c4ee58e3cfc0ece0d773c8ca6abc"
 API_URL = f"https://data.gov.sg/api/action/datastore_search?resource_id={DATASET_ID}"

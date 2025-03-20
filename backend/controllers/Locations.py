@@ -1,4 +1,4 @@
-from api import fetch_districts
+from api import fetch_districts, fetch_crimes, fetch_malls, fetch_resale, fetch_schools, fetch_transport
 from controllers import Preferences, Scoring
 import os
 import sqlite3
@@ -9,6 +9,29 @@ class LocationsController:
     def get_db_path(db_name=':memory:'):
         """Returns the database path based on the provided name"""
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
+    
+    @staticmethod
+    def initialise_db(db_name='app.db'):
+        """
+        Populates locations table in app.db
+        """
+        db_path = LocationsController.get_db_path(db_name)
+
+        # Save location_name
+        fetch_districts.save_location_name_to_db(db_path=db_path)
+
+        # Save crime_rate
+        fetch_crimes.save_crime_rate_to_db(db_path=db_path)
+
+        # Save num_schools
+        fetch_schools.save_num_schools_to_db(db_path=db_path)
+
+        # Save transport
+        fetch_transport.save_num_stations_to_db(db_path=db_path)
+
+        # Save resale_price
+        fetch_resale.save_resale_price_to_db(db_path=db_path)
+
 
     @staticmethod
     def get_locations(db_name='app.db'):
@@ -126,3 +149,6 @@ class LocationsController:
         Return: A dict, (top 5 locations, their score) 
         """
         pass
+
+if __name__ == "__main__":
+    LocationsController.initialise_db()

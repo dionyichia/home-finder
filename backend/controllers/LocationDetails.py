@@ -1,4 +1,4 @@
-from api import fetch_crimes, fetch_districts, fetch_malls, fetch_resale
+from api import fetch_crimes, fetch_districts, fetch_malls, fetch_resale, fetch_schools, fetch_transport
 from controllers import Locations, Plotter, Scoring
 import os
 import sqlite3
@@ -13,6 +13,27 @@ class LocationsDetailController:
     def get_db_path(db_name=':memory:'):
         """Returns the database path based on the provided name"""
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', db_name)
+    
+    @staticmethod
+    def initialise_db(db_name='app.db'):
+        """
+        Populates locations table in app.db
+        """
+
+        db_path = LocationsDetailController.get_db_path(db_name)
+
+        # Save location_name
+        fetch_districts.save_location_name_to_db(db_path=db_path)
+
+        # Save location coordinates
+        fetch_districts.save_location_coords_to_db(db_path=db_path)
+
+        # Save location resale prices
+        fetch_resale.save_transactions_to_db(db_path=db_path)
+
+        # Save location crime news
+        fetch_crimes.save_crimes_to_db(db_path=db_path)
+
 
     @staticmethod
     def get_location_details(location_name: str) -> dict:
@@ -38,12 +59,14 @@ class LocationsDetailController:
         crime_rate = location.get('crime_rate', 0.00)
 
         # Get nums schools /and distance to nearest schools
-        schools = location.get('schools', 0)
+        schools = fetch_schools.get_all_schools_by_district(location_name=location_name)
         # api.fetch_district.fetch_all_schools_by_location() , havent do
 
         # Get num malls /and distance to nearest malls
         malls = fetch_malls.get_all_malls_by_location(location_name=location_name)
-        location['malls'] = malls
+
+        # Get num transport /and distance to nearest malls
+        # Havent do
 
         # Score Location according to preferences
         all_locations = Locations.LocationsController.get_locations()
