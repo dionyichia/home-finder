@@ -15,10 +15,15 @@ def client():
 def test_sort_endpoint(client):
     """Test the sorting endpoint"""
     # Test with a valid sorting category
-    response = client.get('/sort?sort_by=price')
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert isinstance(data, list)
+    print("Test with a valid sorting category =======")
+    for cat in ["price", "crime_rate", "num_schools", "num_malls", "num_transport", "score"]:
+        print("Sorting for category", cat)
+        response = client.get('/sort?sort_by=price')
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        print(data[:3])
+        print("\n")
+        assert isinstance(data, list)
     
     # Test with missing sorting category
     response = client.get('/sort')

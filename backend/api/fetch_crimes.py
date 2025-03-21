@@ -223,7 +223,6 @@ def fetch_all_crimes_by_location(location: str):
     Fetch crimes filtered by location.
     """
     crimes = fetch_all_crimes()
-    print(f"Total crimes in dataset: {len(crimes)}")
     
     # Check if Planning Area is correctly formatted in the crimes data
     if crimes and 'Planning Area' not in crimes[0]:
@@ -233,7 +232,6 @@ def fetch_all_crimes_by_location(location: str):
         # Try to find the correct key
         planning_area_key = next((k for k in keys if k.lower() == 'planning area'), None)
         if planning_area_key:
-            print(f"Found Planning Area as: {planning_area_key}")
             # Filter using the correct key
             return [crime for crime in crimes if crime.get(planning_area_key) == location]
         else:
@@ -252,7 +250,6 @@ def fetch_all_crimes_by_location(location: str):
         if crime_location == location:
             matching_crimes.append(crime)
             
-    print(f"Found {len(matching_crimes)} crimes matching location: {location}")
     return matching_crimes
 
 def save_crimes_to_db(db_path=DB_PATH):

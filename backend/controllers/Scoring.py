@@ -39,9 +39,21 @@ class ScoringController:
 
             # Default all other categories
             case _:
+                # Rank list by highest to lowest for all categories
                 reranked_list = sorted(locations, key=itemgetter(category), reverse=True)
-                print(reranked_list)
-                return ScoringController.normalise_score_for_categories(ranked_locations=reranked_list, category=category)
+                # for loc in reranked_list:
+                #     print(loc.get("location_name"))
+
+                normalised = ScoringController.normalise_score_for_categories(ranked_locations=reranked_list, category=category)
+
+                # Sort the normalized list by score (second element of each tuple) in descending order
+                sorted_by_score = sorted(normalised, key=lambda x: x[1], reverse=True)
+
+                # print(f"sorted_by_score for category {category}")
+                # for loc in sorted_by_score:
+                #     print(loc[0].get("location_name"), loc[1])
+
+                return sorted_by_score
     
     @staticmethod
     def normalise_score_for_categories(ranked_locations: list, category: str):
@@ -60,18 +72,43 @@ class ScoringController:
         
         # for price and crime rate, the lower the better
         if category == 'price' or category == 'crime_rate':
-            lowest = ranked_locations[-1].get(category, 0)
-
-            return [(location, round(lowest / location.get(category, 0), 1)) if lowest != 0 else (location, 0) 
-                for location in reversed(ranked_locations)]
+            # Create a list of valid values (non-zero)
+            valid_values = [loc.get(category, 0) for loc in ranked_locations 
+                            if loc.get(category, 0) > 0]
+            
+            # If no valid values found, return 0 scores for all
+            if not valid_values:
+                return [(location, 0) for location in ranked_locations]
+            
+            lowest = min(valid_values)
+            
+            # Handle zero values to avoid division by zero
+            result = []
+            for location in reversed(ranked_locations):
+                current_value = location.get(category, 0)
+                
+                # If value is zero, assign a score of 0 for price (no HDB)
+                # For crime_rate with value 0, assign the best score (1.0) 
+                if current_value == 0:
+                    if category == 'price':
+                        result.append((location, 0))  # No HDB gets worst score
+                    else:  # crime_rate == 0
+                        result.append((location, 1.0))  # Zero crime gets best score
+                else:
+                    # Normal calculation for non-zero values
+                    result.append((location, round(lowest / current_value, 1)))
+                    
+            return result
             
         # for num schools, malls, transport, the higher the better
         else:
             highest = ranked_locations[0].get(category, 0)
-
-            return [(location, round(location.get(category, 0) / highest, 1)) if highest != 0 else (location, 0) 
-                for location in ranked_locations]
-    
+            
+            if highest == 0:
+                return [(location, 0) for location in ranked_locations]
+                
+            return [(location, round(location.get(category, 0) / highest, 1)) 
+                    for location in ranked_locations]
     @staticmethod
     def calculate_score_for_preferences(locations: list, preferences: dict):
         """

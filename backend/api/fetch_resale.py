@@ -330,10 +330,6 @@ def save_resale_price_to_db(db_path=DB_PATH, flat_type='3 ROOM'):
         app_conn.row_factory = sqlite3.Row
         app_cursor = app_conn.cursor()
         
-        cache_conn = sqlite3.connect(DB_PATH)
-        cache_conn.row_factory = sqlite3.Row
-        cache_cursor = cache_conn.cursor()
-        
         # Get all location names from the locations table
         app_cursor.execute("SELECT location_name FROM locations")
         locations = app_cursor.fetchall()
@@ -344,7 +340,7 @@ def save_resale_price_to_db(db_path=DB_PATH, flat_type='3 ROOM'):
             location_name = location['location_name']
             
             # Get latest resale price directly from cache DB
-            cache_cursor.execute('''
+            app_cursor.execute('''
             SELECT resale_price
             FROM resale_transactions
             WHERE town = ? AND flat_type = ?
@@ -352,10 +348,12 @@ def save_resale_price_to_db(db_path=DB_PATH, flat_type='3 ROOM'):
             LIMIT 1
             ''', (location_name, flat_type))
             
-            result = cache_cursor.fetchone()
+            result = app_cursor.fetchone()
             if result:
                 latest_price = float(result['resale_price'])
                 updates.append((latest_price, location_name))
+            if not result:
+                updates.append((0, location_name))
         
         # Perform batch update
         app_cursor.executemany("UPDATE locations SET price = ? WHERE location_name = ?", updates)
@@ -363,7 +361,6 @@ def save_resale_price_to_db(db_path=DB_PATH, flat_type='3 ROOM'):
         
         # Close connections
         app_conn.close()
-        cache_conn.close()
         
         print(f"Updated prices for {len(updates)} locations")
         return True
@@ -643,4 +640,4 @@ if __name__ == "__main__":
     # save_resale_price_to_db()
     # save_transactions_to_db()
 
-    _migrate_csv_to_db()
+    save_resale_price_to_db()

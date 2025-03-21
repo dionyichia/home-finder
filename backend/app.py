@@ -32,6 +32,9 @@ def get_all_locations():
     if not sorting_category:
         return jsonify({"message": "Missing sorting category!"}), 400
 
+    if sorting_category not in ["price", "crime_rate", "num_schools", "num_malls", "num_transport", "score"]:
+        return jsonify({"message": "Unknown sorting category!"}), 400
+
     ranked_locations = Locations.LocationsController.sort_by_category(sorting_category=sorting_category)
 
     # Return list of ranked locations
@@ -141,3 +144,4 @@ def send_notifications():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    

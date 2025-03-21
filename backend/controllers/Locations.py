@@ -29,7 +29,7 @@ class LocationsController:
         # Save transport
         fetch_transport.save_num_stations_to_db(db_path=db_path)
 
-        # Save resale_price
+        # Save location resale_prices
         fetch_resale.save_resale_price_to_db(db_path=db_path)
 
 
@@ -62,17 +62,13 @@ class LocationsController:
                         # Convert each sqlite3.Row to a dictionary
                         location_details = dict(row)
 
-                        # Get location's geojson data
-                        location_details["geojson"] = fetch_districts.get_location_geodata(location_details['location_name'])
-
                         all_location_details.append(location_details)
                 
-                        return all_location_details
+                    return all_location_details
 
                 else:
                     return []
                 
-
         except Exception as e:
             print(f"Error occurred: {e}")
             return []
@@ -126,11 +122,7 @@ class LocationsController:
         locations = LocationsController.get_locations()
 
         if sorting_category == 'score':
-            if not user_id:
-                return None
-            else:
-                preferences = Preferences.PreferenceContoller.get_user_preferences(user_id=user_id)
-                return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category='score', preferences=preferences)
+            return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category='score', user_id=user_id)
             
         else:
             return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category=sorting_category)
@@ -151,4 +143,7 @@ class LocationsController:
         pass
 
 if __name__ == "__main__":
-    LocationsController.initialise_db()
+    for cat in ["price", "crime_rate", "num_schools", "num_malls", "num_transport", "score"]:
+        print(cat)
+        data = LocationsController.sort_by_category(sorting_category=cat)
+        print('\n')

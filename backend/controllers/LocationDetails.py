@@ -29,7 +29,7 @@ class LocationsDetailController:
         fetch_districts.save_location_coords_to_db(db_path=db_path)
 
         # Save location resale prices
-        fetch_resale.save_transactions_to_db(db_path=db_path)
+        fetch_resale._migrate_csv_to_db()
 
         # Save location crime news
         fetch_crimes.save_crimes_to_db(db_path=db_path)
@@ -64,15 +64,15 @@ class LocationsDetailController:
         # Get num transport /and distance to nearest transport
         transport = fetch_transport.get_all_stations_by_location(location_name=location_name)
 
-        # Score Location according to preferences
-        all_locations = Locations.LocationsController.get_locations()
+        # # Score Location according to preferences
+        # all_locations = Locations.LocationsController.get_locations()
 
-        # If no category, default to price, if cat="score", user preferences will be pulled from DB through Preference Controller
-        all_location_scored = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='price')
-        for location, score in all_location_scored:
-            if location.get('name') == location_name:
-                location_score = score
-                break
+        # # If no category, default to price, if cat="score", user preferences will be pulled from DB through Preference Controller
+        # all_location_scored = Scoring.ScoringController.assign_score_n_rank_all_locations(all_locations, category='price')
+        # for location, score in all_location_scored:
+        #     if location.get('name') == location_name:
+        #         location_score = score
+        #         break
 
         return {
             'price': past_resale_prices,
@@ -81,7 +81,7 @@ class LocationsDetailController:
             'schools': schools,
             'malls': malls,
             'transport': transport,
-            'score': 1, # There is a problem with scoring.
+            # 'score': 1, # There is a problem with scoring.
         }
     
     @staticmethod
