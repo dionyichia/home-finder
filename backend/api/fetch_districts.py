@@ -89,7 +89,12 @@ def get_access_token():
     response = requests.request("POST", url, json=payload)
 
     data = json.loads(response.text)
-                
+    #test
+    #print("DEBUG - access_token response data:", data)
+    
+    #return data["access_token"] below is the new 
+    #if "access_token" not in data:
+       # raise ValueError(f"Failed to retrieve access token from OneMap: {data}")
     return data["access_token"]
 
 
