@@ -8,6 +8,7 @@ __pycache__/
 venv/
 .env/
 .venv/
+.python-version
 
 # Ignore IDE/editor-specific files
 .vscode/

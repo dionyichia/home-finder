@@ -9,10 +9,6 @@ from collections import defaultdict
 # Define API URL
 BASE_URL = "https://www.onemap.gov.sg/api/public/themesvc/retrieveTheme"
 
-# Get access token
-access_token = get_access_token()
-headers = {"Authorization": access_token}
-
 # Use absolute paths based on the location of the current script
 SCRIPT_DIR = pathlib.Path(__file__).parent.absolute()
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -26,6 +22,11 @@ def ensure_cache_dir():
 
 def save_to_csv():
     """Fetch kindergarten locations from API and save to CSV."""
+
+    # Get access token
+    access_token = get_access_token()
+    headers = {"Authorization": access_token}
+
     query_params = {"queryName": "Kindergartens"}  
 
     full_url = requests.Request("GET", "https://www.onemap.gov.sg/api/public/themesvc/retrieveTheme", params=query_params).prepare().url
