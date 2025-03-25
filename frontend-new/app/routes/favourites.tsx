@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
-// API Base URL and Interfaces
-const API_BASE_URL = 'http://127.0.0.1:5000';
-
 interface Location {
   location_name: string;
   description?: string;
@@ -22,34 +19,35 @@ const api = {
    */
   searchLocation: async (locationName: string): Promise<Location> => {
     // Simulated location data for demo purposes
+    // Have to change this to work with the api -> need to set up favourites database for each user?
     const mockLocations: {[key: string]: Location} = {
-      "New York": {
-        location_name: "New York",
-        description: "The most populous city in the United States",
+      "Jurong": {
+        location_name: "Jurong",
+        description: "The most populous city in the Singapore",
         coordinates: { lat: 40.7128, lon: -74.0060 },
         population: 8804190
       },
-      "Paris": {
-        location_name: "Paris",
-        description: "Capital of France, known for the Eiffel Tower",
+      "Clementi": {
+        location_name: "Clementi",
+        description: "clementi is great",
         coordinates: { lat: 48.8566, lon: 2.3522 },
         population: 2140526
       },
-      "Tokyo": {
-        location_name: "Tokyo",
-        description: "Capital of Japan, the world's most populous metropolitan area",
+      "Boon Lay": {
+        location_name: "Boon Lay",
+        description: "Going to school",
         coordinates: { lat: 35.6762, lon: 139.6503 },
         population: 13960000
       },
-      "Sydney": {
-        location_name: "Sydney",
-        description: "Largest city in Australia, known for its harbor",
+      "Changi": {
+        location_name: "Changi",
+        description: "flying off?",
         coordinates: { lat: -33.8688, lon: 151.2093 },
         population: 5312163
       },
-      "Rio de Janeiro": {
-        location_name: "Rio de Janeiro",
-        description: "Famous for its carnival and beautiful beaches",
+      "Orchard": {
+        location_name: "Orchard",
+        description: "Famous for its carnival and beautiful roads",
         coordinates: { lat: -22.9068, lon: -43.1729 },
         population: 6320446
       }
@@ -67,7 +65,7 @@ const api = {
   getPreferences: async () => {
     return {
       preferences: [],
-      favorites: ["New York", "Paris", "Tokyo"] // Default favorites
+      favorites: ["Jurong", "Clementi", "Boon Lay"] // Default favorites
     }
   }
 };
@@ -149,14 +147,14 @@ const FavoritesPage: React.FC = () => {
   // Render loading state
   if (initialLoading) {
     return (
-      <div className="flex justify-center items-center h-full">
+      <div className="flex justify-center items-center h-full pl-16">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full w-full p-4 overflow-hidden">
+    <div className="flex flex-col h-full w-full p-4 pl-20 overflow-hidden">
       {/* Search Bar */}
       <div className="mb-4">
         <div className="relative"> 
@@ -181,7 +179,7 @@ const FavoritesPage: React.FC = () => {
 
         {locationDetails && (
           <div className="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 text-sm">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center text-black">
               <div>
                 <strong>{locationDetails.location_name}</strong>
                 <p>{locationDetails.description}</p>
@@ -215,7 +213,7 @@ const FavoritesPage: React.FC = () => {
           {favorites.map((location) => (
             <div 
               key={location.location_name} 
-              className="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow"
+              className="bg-white text-black shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow"
             >
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-semibold">{location.location_name}</h2>
