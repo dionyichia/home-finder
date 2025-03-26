@@ -12,6 +12,7 @@
     "@react-router/node": "^7.1.5",
     "@react-router/serve": "^7.1.5",
     "@types/mapbox-gl": "^3.4.1",
+    "axios": "^1.8.4",
     "chart.js": "^4.4.8",
     "isbot": "^5.1.17",
     "mapbox-gl": "^3.10.0",

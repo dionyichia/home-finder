@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import axios from 'axios';
+import { MagnifyingGlassIcon, MapPinIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface Location {
   location_name: string;
@@ -8,102 +9,63 @@ interface Location {
     lat: number;
     lon: number;
   };
-  population?: number;
-  [key: string]: any;
+  crime_rate?: number;
+  price?: number;
+  num_transport?: number;
+  num_malls?: number;
+  num_schools?: number;
 }
 
-// API Methods
-const api = {
-  /**
-   * Search for a location by name
-   */
-  searchLocation: async (locationName: string): Promise<Location> => {
-    // Simulated location data for demo purposes
-    // Have to change this to work with the api -> need to set up favourites database for each user?
-    const mockLocations: {[key: string]: Location} = {
-      "Jurong": {
-        location_name: "Jurong",
-        description: "The most populous city in the Singapore",
-        coordinates: { lat: 40.7128, lon: -74.0060 },
-        population: 8804190
-      },
-      "Clementi": {
-        location_name: "Clementi",
-        description: "clementi is great",
-        coordinates: { lat: 48.8566, lon: 2.3522 },
-        population: 2140526
-      },
-      "Boon Lay": {
-        location_name: "Boon Lay",
-        description: "Going to school",
-        coordinates: { lat: 35.6762, lon: 139.6503 },
-        population: 13960000
-      },
-      "Changi": {
-        location_name: "Changi",
-        description: "flying off?",
-        coordinates: { lat: -33.8688, lon: 151.2093 },
-        population: 5312163
-      },
-      "Orchard": {
-        location_name: "Orchard",
-        description: "Famous for its carnival and beautiful roads",
-        coordinates: { lat: -22.9068, lon: -43.1729 },
-        population: 6320446
-      }
-    };
-
-    const location = mockLocations[locationName];
-    if (location) return location;
-
-    throw new Error(`Location not found: ${locationName}`);
-  },
-  
-  /**
-   * Get user preferences
-   */
-  getPreferences: async () => {
-    return {
-      preferences: [],
-      favorites: ["Jurong", "Clementi", "Boon Lay"] // Default favorites
-    }
-  }
-};
-
-// Favorites Page Component
-const FavoritesPage: React.FC = () => {
+const FavoritesMapSidebar: React.FC = () => {
   // State management
   const [favorites, setFavorites] = useState<Location[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [query, setQuery] = useState("");
-  const [locationDetails, setLocationDetails] = useState<Location | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
 
-  // Fetch initial favorites
+  // Fetch initial data
   useEffect(() => {
-    const fetchFavorites = async () => {
+    const fetchInitialData = async () => {
       try {
-        const preferences = await api.getPreferences();
+        // Fetch all locations with GeoJSON data
+        const locationsResponse = await axios.get('/get_all_coords');
+        const locationsGeoData = locationsResponse.data;
+        setAllLocations(locationsGeoData);
+
+        // Fetch favorites
+        const favoritesResponse = await axios.get('/api/favorites', { 
+          params: { userId: 'user123' } 
+        });
+        const favoritesData = favoritesResponse.data;
         
-        if (preferences.favorites && preferences.favorites.length > 0) {
-          const favoriteLocations = await Promise.all(
-            preferences.favorites.map(async (locationName: string) => {
-              return await api.searchLocation(locationName);
-            })
+        // Transform favorites to include coordinates
+        const locationsWithCoordinates: Location[] = favoritesData.map((fav: any) => {
+          // Find corresponding location in all locations to get coordinates
+          const locationDetails = locationsGeoData.find(
+            (loc: Location) => loc.location_name === fav.location_name
           );
-          
-          setFavorites(favoriteLocations);
-        }
+
+          return {
+            location_name: fav.location_name,
+            coordinates: locationDetails?.coordinates || undefined,
+            crime_rate: fav.crime_rate,
+            price: fav.price,
+            num_transport: fav.num_transport,
+            num_malls: fav.num_malls,
+            num_schools: fav.num_schools
+          };
+        });
+
+        setFavorites(locationsWithCoordinates);
       } catch (err) {
-        setError('Failed to fetch favorite locations');
+        setError('Failed to fetch locations or favorites');
         console.error(err);
-      } finally {
-        setInitialLoading(false);
       }
     };
 
-    fetchFavorites();
+    fetchInitialData();
   }, []);
 
   // Search handler
@@ -113,8 +75,16 @@ const FavoritesPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.searchLocation(query);
-      setLocationDetails(data);
+      // Search in all locations
+      const foundLocation = allLocations.find(
+        loc => loc.location_name.toLowerCase() === query.toLowerCase()
+      );
+      
+      if (foundLocation) {
+        setSelectedLocation(foundLocation);
+      } else {
+        setError("Location not found. Try another search.");
+      }
     } catch (err) {
       console.error("Search error:", err);
       setError("Location not found. Try another search.");
@@ -123,129 +93,157 @@ const FavoritesPage: React.FC = () => {
     }
   };
 
-  // Key down handler for search input
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
+  // Add to favorites
+  const addToFavorites = async () => {
+    if (selectedLocation) {
+      try {
+        // Replace 'user123' with actual user ID
+        const response = await axios.post('/api/favorites/add', { 
+          userId: 'user123', 
+          locationName: selectedLocation.location_name 
+        });
+        
+        if (response.data.success) {
+          // Add to favorites list if not already present
+          if (!favorites.some(fav => fav.location_name === selectedLocation.location_name)) {
+            setFavorites([...favorites, selectedLocation]);
+          }
+        }
+      } catch (err) {
+        console.error("Error adding to favorites:", err);
+      }
     }
   };
 
-  // Remove a specific favorite
-  const removeFavorite = (locationName: string) => {
-    setFavorites(prevFavorites => 
-      prevFavorites.filter(location => location.location_name !== locationName)
-    );
-  };
-
-  // Add location to favorites
-  const addToFavorites = () => {
-    if (locationDetails && !favorites.some(fav => fav.location_name === locationDetails.location_name)) {
-      setFavorites(prevFavorites => [...prevFavorites, locationDetails]);
+  // Remove from favorites
+  const removeFavorite = async (locationName: string) => {
+    try {
+      // Replace 'user123' with actual user ID
+      const response = await axios.delete('/api/favorites/remove', { 
+        data: { 
+          userId: 'user123', 
+          locationName 
+        } 
+      });
+      
+      if (response.data.success) {
+        setFavorites(favorites.filter(fav => fav.location_name !== locationName));
+        
+        // Clear selection if removed location was selected
+        if (selectedLocation?.location_name === locationName) {
+          setSelectedLocation(null);
+        }
+      }
+    } catch (err) {
+      console.error("Error removing favorite:", err);
     }
   };
-
-  // Render loading state
-  if (initialLoading) {
-    return (
-      <div className="flex justify-center items-center h-full pl-16">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex flex-col h-full w-full p-4 pl-20 overflow-hidden">
-      {/* Search Bar */}
-      <div className="mb-4">
-        <div className="relative"> 
+    <div className="flex">
+      {/* Sidebar */}
+      <div className="w-[400px] h-screen overflow-y-auto bg-white p-4 border-r">
+        {/* Search Bar */}
+        <div className="mb-4 relative">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Search For Location"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10"
           />
-          <button
-            onClick={handleSearch}
-            className="absolute right-2 top-2 text-gray-500 hover:text-purple-600"
+          <button 
+            onClick={handleSearch} 
+            className="absolute right-2 top-2 text-gray-500"
           >
             <MagnifyingGlassIcon className="w-5 h-5" />
           </button>
         </div>
 
-        {loading && <p className="text-sm text-gray-500">Loading...</p>}
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
 
-        {locationDetails && (
-          <div className="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 text-sm">
-            <div className="flex justify-between items-center text-black">
-              <div>
-                <strong>{locationDetails.location_name}</strong>
-                <p>{locationDetails.description}</p>
-                {locationDetails.coordinates && (
-                  <p>Coordinates: {locationDetails.coordinates.lat}, {locationDetails.coordinates.lon}</p>
-                )}
-                {locationDetails.population && (
-                  <p>Population: {locationDetails.population.toLocaleString()}</p>
-                )}
-              </div>
+        {/* Selected Location Details */}
+        {selectedLocation && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-md">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">{selectedLocation.location_name}</h2>
               <button 
                 onClick={addToFavorites}
-                className="ml-2 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                className="text-green-500 hover:text-green-700"
               >
-                Add to Favorites
+                <MapPinIcon className="w-6 h-6" />
               </button>
             </div>
+            {/* Location Details */}
+            <div className="mt-2 space-y-2 text-sm text-gray-600">
+              {selectedLocation.crime_rate && (
+                <p>Crime Rate: {selectedLocation.crime_rate}</p>
+              )}
+              {selectedLocation.price && (
+                <p>Price: ${selectedLocation.price}</p>
+              )}
+              {selectedLocation.num_transport && (
+                <p>Transport Stations: {selectedLocation.num_transport}</p>
+              )}
+              {selectedLocation.num_malls && (
+                <p>Malls: {selectedLocation.num_malls}</p>
+              )}
+              {selectedLocation.num_schools && (
+                <p>Schools: {selectedLocation.num_schools}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Favorites List */}
+        <h2 className="text-xl font-bold mb-4">My Favorites</h2>
+        {favorites.length === 0 ? (
+          <p className="text-gray-500 text-center">No favorite locations</p>
+        ) : (
+          <div className="space-y-2">
+            {favorites.map((location) => (
+              <div 
+                key={location.location_name}
+                className="flex justify-between items-center p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition"
+                onClick={() => setSelectedLocation(location)}
+              >
+                <span>{location.location_name}</span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFavorite(location.location_name);
+                  }}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Favorites List */}
-      <h1 className="text-2xl font-bold mb-4">My Favorite Locations</h1>
-      
-      {favorites.length === 0 ? (
-        <div className="text-center text-gray-500 flex items-center justify-center h-full">
-          No favorite locations yet. Start exploring and add some!
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
-          {favorites.map((location) => (
-            <div 
-              key={location.location_name} 
-              className="bg-white text-black shadow-md rounded-lg p-4 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold">{location.location_name}</h2>
-                <button
-                  onClick={() => removeFavorite(location.location_name)}
-                  className="text-red-500 hover:text-red-700 transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
-              
-              {location.description && (
-                <p className="text-gray-600 text-sm mb-2">{location.description}</p>
-              )}
-              
-              {location.coordinates && (
-                <div className="text-gray-600 text-sm">
-                  <strong>Coordinates:</strong> {location.coordinates.lat}, {location.coordinates.lon}
-                </div>
-              )}
-              
-              {location.population && (
-                <div className="text-gray-600 text-sm">
-                  <strong>Population:</strong> {location.population.toLocaleString()}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Alternative Visualization */}
+      <div className="flex-1 bg-gray-100 flex items-center justify-center">
+        {selectedLocation ? (
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">{selectedLocation.location_name}</h2>
+            {selectedLocation.coordinates && (
+              <p>Coordinates: {selectedLocation.coordinates.lat}, {selectedLocation.coordinates.lon}</p>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-500">Select a location to view details</p>
+        )}
+      </div>
     </div>
   );
 };
 
-export default FavoritesPage;
+export default FavoritesMapSidebar;
