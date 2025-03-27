@@ -1,31 +1,34 @@
 import {
   useEffect,
   useState,
-  type JSXElementConstructor,
-  type Key,
-  type ReactElement,
-  type ReactNode,
-  type ReactPortal
-} from "react"; // Importing useState and useEffect hooks from React for managing state
-import { useParams } from "react-router-dom"; // Importing useParams for getting route parameters
-import {api} from "../api"; // Adjust the path if needed
-import { Link } from "react-router-dom"; // Importing Link component for navigation
-import { HeartIcon, ArrowLeftIcon, StarIcon, MapPinIcon, ClockIcon } from "@heroicons/react/24/outline"; // Importing icons from Heroicons for UI elements
-import { Line } from "react-chartjs-2"; // Importing Line component for rendering line charts
-import { Chart, registerables } from "chart.js"; // Importing Chart and registerables from Chart.js for chart functionality
+} from "react";
+import { useParams, Link } from "react-router-dom";
+import { api } from "../api";
+import {
+  HeartIcon,
+  ArrowLeftIcon,
+  StarIcon,
+  MapPinIcon,
+  ClockIcon,
+  AcademicCapIcon,
+  ShoppingBagIcon,
+} from "@heroicons/react/24/outline";
+import { Line } from "react-chartjs-2";
+import { Chart, registerables } from "chart.js";
 
-Chart.register(...registerables); // Registering all necessary components for Chart.js
+Chart.register(...registerables);
 
 interface NearbyPlace {
   name: string;
   distance: string;
-  time?: string; // Optional for malls
+  time?: string;
 }
 
-const ViewLocation = () => { // Defining the ViewLocation functional component
-  const [isFavorite, setIsFavorite] = useState(false); // State to track if the location is marked as favorite
+const ViewLocation = ({ locationName: propName }: { locationName?: string }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
   const [locationData, setLocationData] = useState<any>(null);
-  const { locationName } = useParams();
+  const { locationName: paramName } = useParams();
+  const locationName = propName || paramName;
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -41,121 +44,122 @@ const ViewLocation = () => { // Defining the ViewLocation functional component
     fetchLocation();
   }, [locationName]);
 
-  if (!locationData) return <p>Loading...</p>;
+  if (!locationData) return <p className="text-black">Loading...</p>;
 
-  return ( // JSX to render the component
-    <div className="max-w-4xl mx-auto p-4"> {/* Container for the entire component */}
-      {/* Back Button */}
-      <div className="flex items-center space-x-2 mb-4"> {/* Flexbox for back button and title */}
-        <Link to="/" className="p-2 bg-gray-200 rounded-full"> {/* Link to navigate back to home */}
-          <ArrowLeftIcon className="w-6 h-6" /> {/* Left arrow icon */}
-        </Link>
-        <h2 className="text-xl font-bold">{locationData?.name}</h2> {/* Title displaying the location name */}
-      </div>
+  return (
+    <div className="w-full max-w-[700px] p-6 pb-20 bg-white rounded-2xl shadow-lg mx-auto">
+      {!propName && (
+        <div className="flex items-center space-x-2 mb-4">
+          <Link to="/" className="p-2 bg-gray-200 rounded-full">
+            <ArrowLeftIcon className="w-6 h-6" />
+          </Link>
+          <h2 className="text-xl font-bold text-black">{locationData?.name}</h2>
+        </div>
+      )}
 
-      {/* Image Placeholder */}
-      <div className="w-full h-48 bg-gray-300 rounded-lg mb-4"></div> {/* Placeholder for an image of the location */}
+      <div className="w-full h-40 bg-gray-300 rounded mb-4" />
 
-      {/* Header Section */}
-      <div className="flex justify-between items-center"> {/* Flexbox for header layout */}
-        <h1 className="text-2xl font-bold">{locationData?.name}</h1> {/* Main title displaying the location name */}
-        <div className="flex items-center space-x-2"> {/* Flexbox for rating display */}
-          <span className="text-xl font-bold">4.0</span> {/* Displaying the rating */}
-          <div className="flex"> {/* Flexbox for star icons */}
-            {Array(4) // Loop to create 4 filled star icons
-              .fill(<StarIcon className="w-6 h-6 text-yellow-500" />)
-              .concat(<StarIcon className="w-6 h-6 text-gray-300" />)} {/* Adding 1 empty star icon */}
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="text-2xl font-bold text-black">{locationData?.name}</h1>
+        <div className="flex items-center space-x-2">
+          <span className="text-xl font-bold text-black">4.0</span>
+          <div className="flex gap-1">
+            {Array.from({ length: 5 }, (_, i) => (
+              <StarIcon
+                key={i}
+                className={`w-6 h-6 ${
+                  i < locationData.crimeRate ? "text-black" : "text-gray-300"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Price & Google Maps Link */}
-      <div className="flex justify-between items-center mt-2"> {/* Flexbox for price and link layout */}
-        <p className="text-lg font-semibold text-gray-700"> {/* Displaying the price */}
+      <div className="flex justify-between items-center mt-2">
+        <p className="text-lg font-semibold text-black">
           Price: <span className="text-blue-500">{locationData?.price}</span>
         </p>
-        <a href="https://www.google.com/maps" target="_blank" className="text-blue-500 text-sm"> {/* Link to Google Maps */}
+        <a
+          href="https://www.google.com/maps"
+          target="_blank"
+          className="text-blue-500 text-sm"
+        >
           View on Google Maps
         </a>
       </div>
 
-      {/* Favorite Button */}
       <button
-        onClick={() => setIsFavorite(!isFavorite)} // Toggle favorite state on button click
-        className="mt-2 p-2 rounded-full border border-gray-300 hover:bg-gray-100" // Button styling
+        onClick={() => setIsFavorite(!isFavorite)}
+        className="mt-2 p-2 rounded-full border border-gray-300 hover:bg-gray-100"
       >
-        <HeartIcon className={`w-6 h-6 ${isFavorite ? "text-red-500" : "text-gray-400"}`} /> {/* Heart icon indicating favorite status */}
+        <HeartIcon
+          className={`w-6 h-6 ${isFavorite ? "text-red-500" : "text-gray-400"}`}
+        />
       </button>
 
-      {/* Resale Price Chart */}
-      <div className="mt-6"> {/* Container for resale price chart */}
-        <h3 className="text-lg font-bold">Predicted Resale Price</h3> {/* Chart title */}
-        <Line
-          data={{
-            labels: locationData?.resaleTrends?.labels, // X-axis labels from location data
-            datasets: [
-              {
-                label: "Price ($K)", // Label for the dataset
-                data: locationData?.resaleTrends?.data, // Y-axis data points from location data
-                borderColor: "red", // Line color
-                borderWidth: 2, // Line width
-                fill: false, // No fill under the line
-              },
-            ],
-          }}
-          options={{
-            responsive: true, // Responsive chart
-            maintainAspectRatio: false, // Allow chart to adjust aspect ratio
-          }}
-        />
-      </div>
-
       {/* Crime Rate */}
-      <div className="mt-6"> {/* Container for crime rate section */}
-        <h3 className="text-lg font-bold">Crime Rate</h3> {/* Section title */}
-        <div className="flex space-x-2 mt-2"> {/* Flexbox for star rating display */}
-          {Array(locationData?.crimeRate) // Loop to create filled star icons based on crime rate
-            .fill(<StarIcon className="w-6 h-6 text-black" />)
-            .concat(
-              Array(5 - locationData?.crimeRate).fill( // Loop to create empty star icons
-                <StarIcon className="w-6 h-6 text-gray-300" />
-              )
-            )}
+      <div className="mt-6">
+        <h3 className="text-xl font-bold mb-3 text-black">Crime Rate</h3>
+        <div className="flex gap-1">
+          {Array.from({ length: 5 }, (_, i) => (
+            <StarIcon
+              key={i}
+              className={`w-6 h-6 ${
+                i < locationData.crimeRate ? "text-black" : "text-gray-300"
+              }`}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Nearest Schools */}
-      <div className="mt-6"> {/* Container for nearest schools section */}
-        <h3 className="text-lg font-bold">Nearest Schools</h3> {/* Section title */}
-        {locationData?.nearestSchools.map((school: NearbyPlace, index: number) => ( // Mapping over nearest schools to display each
-          <div key={index} className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"> {/* Container for each school */}
-            <div> {/* Container for school details */}
-              <h4 className="font-bold">{school.name}</h4> {/* School name */}
-              <p className="text-gray-600 flex items-center"> {/* Distance and time display */}
+      {/* Schools */}
+      <div className="mt-6">
+        <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-black">
+          <AcademicCapIcon className="w-5 h-5 text-blue-500" />
+          Nearest Schools
+        </h3>
+        {locationData?.nearestSchools.map((school: NearbyPlace, index: number) => (
+          <div
+            key={index}
+            className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"
+          >
+            <div>
+              <h4 className="font-bold text-black">{school.name}</h4>
+              <p className="text-gray-800 flex items-center">
                 <MapPinIcon className="w-4 h-4 mr-1" /> {school.distance} from Location
               </p>
             </div>
-            <p className="text-gray-600 flex items-center"> {/* Travel time display */}
+            <p className="text-gray-800 flex items-center">
               <ClockIcon className="w-4 h-4 mr-1" /> {school.time}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Nearest Malls */}
-      <div className="mt-6"> {/* Container for nearest malls section */}
-        <h3 className="text-lg font-bold">Nearest Malls</h3> {/* Section title */}
-        {locationData?.nearestMalls.map((mall: NearbyPlace, index: number) => ( // Mapping over nearest malls to display each
-          <div key={index} className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"> {/* Container for each mall */}
-            <h4 className="font-bold">{mall.name}</h4> {/* Mall name */}
-            <p className="text-gray-600 flex items-center"> {/* Travel time display */}
+      {/* Malls */}
+      <div className="mt-6">
+        <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-black">
+          <ShoppingBagIcon className="w-5 h-5 text-pink-500" />
+          Nearest Malls
+        </h3>
+        {locationData?.nearestMalls.map((mall: NearbyPlace, index: number) => (
+          <div
+            key={index}
+            className={`bg-gray-100 p-4 rounded-lg mt-2 flex justify-between ${
+              index === locationData.nearestMalls.length - 1 ? "mb-6" : ""
+            }`}
+          >
+            <h4 className="font-bold text-black">{mall.name}</h4>
+            <p className="text-gray-800 flex items-center">
               <ClockIcon className="w-4 h-4 mr-1" /> {mall.distance}
             </p>
           </div>
         ))}
+        <div className="h-8" />
       </div>
     </div>
   );
 };
 
-export default ViewLocation; // Exporting the ViewLocation component for use in other parts of the application
+export default ViewLocation;

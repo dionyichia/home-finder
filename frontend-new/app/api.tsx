@@ -111,26 +111,25 @@ export const api = {
   /**
  * Search for a location by name
  */
-searchLocation: async (locationName: string) => {
-  // Placeholder mock data for comparison and testing
-  return {
-    name: locationName,
-    price: "$500K",
-    resaleTrends: {
-      labels: ["2020", "2021", "2022"],
-      data: [480, 490, 500],
-    },
-    crimeRate: 3,
-    nearestSchools: [
-      { name: "School A", distance: "500m", time: "7 mins" },
-      { name: "School B", distance: "800m", time: "10 mins" },
-    ],
-    nearestMalls: [
-      { name: "Mall X", distance: "1.2km" },
-      { name: "Mall Y", distance: "2km" },
-    ],
-  };
-},
+  searchLocation: async (locationName: string) => {
+    return {
+      name: locationName,
+      price: "$500K",
+      resaleTrends: {
+        labels: ["2020", "2021", "2022"],
+        data: [480, 490, 500],
+      },
+      crimeRate: 3,
+      nearestSchools: [
+        { name: "School A", distance: "500m", time: "7 mins" },
+        { name: "School B", distance: "800m", time: "10 mins" },
+      ],
+      nearestMalls: [
+        { name: "Mall X", distance: "1.2km" },
+        { name: "Mall Y", distance: "2km" },
+      ],
+    };
+  },
   
   /**
    * Get user preferences (based on your useEffect code)
