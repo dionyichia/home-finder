@@ -47,13 +47,13 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
   if (!locationData) return <p className="text-black">Loading...</p>;
 
   return (
-    <div className="w-full max-w-[700px] p-6 pb-20 bg-white rounded-2xl shadow-lg mx-auto">
+    <div className="w-full max-w-[700px] p-6 pb-20 bg-white/50 backdrop-blur-lg border border-white/30 rounded-2xl shadow-xl mx-auto text-black">
       {!propName && (
         <div className="flex items-center space-x-2 mb-4">
           <Link to="/" className="p-2 bg-gray-200 rounded-full">
             <ArrowLeftIcon className="w-6 h-6" />
           </Link>
-          <h2 className="text-xl font-bold text-black">{locationData?.name}</h2>
+          <h2 className="text-xl font-bold">{locationData?.name}</h2>
         </div>
       )}
 
@@ -63,7 +63,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-black">{locationData?.name}</h1>
+            <h1 className="text-2xl font-bold">{locationData?.name}</h1>
             <button
               onClick={() => setIsFavorite(!isFavorite)}
               className="p-1 rounded-full border border-gray-300 hover:bg-gray-100 transition-transform duration-150 active:scale-110"
@@ -75,7 +75,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
               />
             </button>
           </div>
-          <p className="text-lg font-semibold text-black">
+          <p className="text-lg font-semibold">
             Price: <span className="text-purple-800 font-bold">{locationData?.price}</span>
           </p>
           <a
@@ -89,7 +89,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-black">4.0</span>
+            <span className="text-xl font-bold">4.0</span>
             <div className="flex gap-1">
               {Array.from({ length: 5 }, (_, i) => (
                 <StarIcon
@@ -107,7 +107,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
       {/* Resale Chart */}
       {locationData?.resaleTrends && (
         <div className="mt-6">
-          <h3 className="text-xl font-bold mb-3 text-black">Predicted Resale Price</h3>
+          <h3 className="text-xl font-bold mb-3">Predicted Resale Price</h3>
           <div className="h-[300px]">
             <Line
               data={{
@@ -150,7 +150,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
       {/* Crime Rate */}
       <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3 text-black">Crime Rate</h3>
+        <h3 className="text-xl font-bold mb-3">Crime Rate</h3>
         <div className="flex gap-1">
           {Array.from({ length: 5 }, (_, i) => (
             <StarIcon
@@ -165,7 +165,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
       {/* Schools */}
       <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-black">
+        <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
           <AcademicCapIcon className="w-5 h-5 text-blue-500" />
           Nearest Schools
         </h3>
@@ -175,7 +175,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
             className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"
           >
             <div>
-              <h4 className="font-bold text-black">{school.name}</h4>
+              <h4 className="font-bold">{school.name}</h4>
               <p className="text-gray-800 flex items-center">
                 <MapPinIcon className="w-4 h-4 mr-1" /> {school.distance} from Location
               </p>
@@ -189,7 +189,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
       {/* Malls */}
       <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-black">
+        <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
           <ShoppingBagIcon className="w-5 h-5 text-pink-500" />
           Nearest Malls
         </h3>
@@ -200,7 +200,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
               index === locationData.nearestMalls.length - 1 ? "mb-6" : ""
             }`}
           >
-            <h4 className="font-bold text-black">{mall.name}</h4>
+            <h4 className="font-bold">{mall.name}</h4>
             <p className="text-gray-800 flex items-center">
               <ClockIcon className="w-4 h-4 mr-1" /> {mall.distance}
             </p>

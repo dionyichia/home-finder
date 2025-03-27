@@ -24,17 +24,11 @@ import ViewLocation from "../components/ViewLocation";
 const Compare = () => {
   const [locationA, setLocationA] = useState("");
   const [locationB, setLocationB] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [triggerCompare, setTriggerCompare] = useState(false);
 
   const scrollRefA = useRef<HTMLDivElement>(null);
   const scrollRefB = useRef<HTMLDivElement>(null);
   const isSyncingScroll = useRef(false);
-
-  const handleCompare = () => {
-    if (locationA && locationB) {
-      setSubmitted(true);
-    }
-  };
 
   const syncScroll = (from: "A" | "B") => {
     if (isSyncingScroll.current) return;
@@ -44,66 +38,75 @@ const Compare = () => {
     const target = from === "A" ? scrollRefB.current : scrollRefA.current;
 
     if (source && target) {
-      requestAnimationFrame(() => {
-        target.scrollTop = source.scrollTop;
-        isSyncingScroll.current = false;
-      });
+      target.scrollTop = source.scrollTop;
     }
+
+    setTimeout(() => {
+      isSyncingScroll.current = false;
+    }, 10);
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-start pl-20 p-6 bg-black text-white overflow-auto">
-      <h2 className="text-4xl font-bold mb-6 text-center">Compare Locations</h2>
+    <div className="min-h-screen w-full flex flex-col items-center justify-start pl-20 p-6 bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] text-black overflow-auto">
+      {/* ✨ Clean, centered title */}
+      <h2 className="text-4xl font-semibold text-center text-gray-900 tracking-tight mb-4">
+        Compare Locations
+      </h2>
 
-      <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-6 w-full max-w-4xl">
+      {/* 📍 Centered inputs & button */}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-6 w-full max-w-xl mx-auto">
         <input
           type="text"
           placeholder="Enter Location A"
           value={locationA}
           onChange={(e) => setLocationA(e.target.value)}
-          className="border rounded px-4 py-2 w-full md:w-[260px] text-black bg-white shadow-sm"
+          className="border rounded px-4 py-2 w-full md:w-[300px] text-black"
         />
         <input
           type="text"
           placeholder="Enter Location B"
           value={locationB}
           onChange={(e) => setLocationB(e.target.value)}
-          className="border rounded px-4 py-2 w-full md:w-[260px] text-black bg-white shadow-sm"
+          className="border rounded px-4 py-2 w-full md:w-[300px] text-black"
         />
         <button
-          onClick={handleCompare}
-          className="px-6 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600 transition"
+          onClick={() => setTriggerCompare(true)}
+          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
         >
           Compare
         </button>
       </div>
 
-      {submitted && (
-        <div className="flex flex-col md:flex-row gap-10 w-full max-w-7xl justify-center items-stretch">
-          {locationA && (
-            <div className="flex-1 overflow-y-auto bg-transparent">
-              <div
-                ref={scrollRefA}
-                onScroll={() => syncScroll("A")}
-                className="w-full h-full overflow-y-auto"
-              >
-                <ViewLocation locationName={locationA} />
-              </div>
+      {/* 💡 Tip below inputs */}
+      <div className="text-sm text-gray-600 mb-6 text-center w-full max-w-3xl">
+        Tip: Enter two location names and press Compare to view their details side by side.
+      </div>
+
+      {/* 📊 Comparison section */}
+      <div className="flex flex-col md:flex-row gap-10 w-full max-w-7xl justify-center items-stretch">
+        {triggerCompare && locationA && (
+          <div className="flex-1 max-h-[80vh] overflow-hidden rounded-xl">
+            <div
+              ref={scrollRefA}
+              onScroll={() => syncScroll("A")}
+              className="h-full overflow-y-auto p-4"
+            >
+              <ViewLocation locationName={locationA} />
             </div>
-          )}
-          {locationB && (
-            <div className="flex-1 overflow-y-auto bg-transparent">
-              <div
-                ref={scrollRefB}
-                onScroll={() => syncScroll("B")}
-                className="w-full h-full overflow-y-auto"
-              >
-                <ViewLocation locationName={locationB} />
-              </div>
+          </div>
+        )}
+        {triggerCompare && locationB && (
+          <div className="flex-1 max-h-[80vh] overflow-hidden rounded-xl">
+            <div
+              ref={scrollRefB}
+              onScroll={() => syncScroll("B")}
+              className="h-full overflow-y-auto p-4"
+            >
+              <ViewLocation locationName={locationB} />
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
