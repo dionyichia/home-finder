@@ -59,44 +59,50 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
       <div className="w-full h-40 bg-gray-300 rounded mb-4" />
 
-      <div className="flex justify-between items-center mb-2">
-        <h1 className="text-2xl font-bold text-black">{locationData?.name}</h1>
-        <div className="flex items-center space-x-2">
-          <span className="text-xl font-bold text-black">4.0</span>
-          <div className="flex gap-1">
-            {Array.from({ length: 5 }, (_, i) => (
-              <StarIcon
-                key={i}
-                className={`w-6 h-6 ${
-                  i < locationData.crimeRate ? "text-black" : "text-gray-300"
+      {/* Top Row: Name + Price + Heart | Rating + Stars */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-black">{locationData?.name}</h1>
+            <button
+              onClick={() => setIsFavorite(!isFavorite)}
+              className="p-1 rounded-full border border-gray-300 hover:bg-gray-100 transition-transform duration-150 active:scale-110"
+            >
+              <HeartIcon
+                className={`w-5 h-5 transition-all duration-300 ease-in-out ${
+                  isFavorite ? "text-red-500 scale-110" : "text-gray-400"
                 }`}
               />
-            ))}
+            </button>
+          </div>
+          <p className="text-lg font-semibold text-black">
+            Price: <span className="text-purple-800 font-bold">{locationData?.price}</span>
+          </p>
+          <a
+            href="https://www.google.com/maps"
+            target="_blank"
+            className="text-purple-700 underline text-sm mt-1 inline-block"
+          >
+            View on Google Maps
+          </a>
+        </div>
+
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-black">4.0</span>
+            <div className="flex gap-1">
+              {Array.from({ length: 5 }, (_, i) => (
+                <StarIcon
+                  key={i}
+                  className={`w-6 h-6 ${
+                    i < locationData.crimeRate ? "text-black" : "text-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-
-      <div className="flex justify-between items-center mt-2">
-        <p className="text-lg font-semibold text-black">
-          Price: <span className="text-purple-800 font-bold">{locationData?.price}</span>
-        </p>
-        <a
-          href="https://www.google.com/maps"
-          target="_blank"
-          className="text-purple-700 underline text-sm"
-        >
-          View on Google Maps
-        </a>
-      </div>
-
-      <button
-        onClick={() => setIsFavorite(!isFavorite)}
-        className="mt-2 p-2 rounded-full border border-gray-300 hover:bg-gray-100"
-      >
-        <HeartIcon
-          className={`w-6 h-6 ${isFavorite ? "text-red-500" : "text-gray-400"}`}
-        />
-      </button>
 
       {/* Resale Chart */}
       {locationData?.resaleTrends && (
@@ -122,24 +128,18 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: false },
-                },
+                plugins: { legend: { display: false } },
                 scales: {
                   y: {
                     ticks: {
                       callback: (val) => `${val}k`,
                       color: "#6B7280",
                     },
-                    grid: {
-                      color: "#e5e7eb",
-                    },
+                    grid: { color: "#e5e7eb" },
                   },
                   x: {
                     ticks: { color: "#6B7280" },
-                    grid: {
-                      color: "#e5e7eb",
-                    },
+                    grid: { color: "#e5e7eb" },
                   },
                 },
               }}
