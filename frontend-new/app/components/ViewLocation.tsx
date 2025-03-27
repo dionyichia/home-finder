@@ -8,7 +8,7 @@ import {
   type ReactPortal
 } from "react"; // Importing useState and useEffect hooks from React for managing state
 import { useParams } from "react-router-dom"; // Importing useParams for getting route parameters
-import api from "../routes/api"; // Adjust the path if needed
+import {api} from "../api"; // Adjust the path if needed
 import { Link } from "react-router-dom"; // Importing Link component for navigation
 import { HeartIcon, ArrowLeftIcon, StarIcon, MapPinIcon, ClockIcon } from "@heroicons/react/24/outline"; // Importing icons from Heroicons for UI elements
 import { Line } from "react-chartjs-2"; // Importing Line component for rendering line charts
@@ -31,7 +31,7 @@ const ViewLocation = () => { // Defining the ViewLocation functional component
     const fetchLocation = async () => {
       try {
         if (!locationName) return;
-        const data = await api.getLocationDetails(locationName);
+        const data = await api.searchLocation(locationName);
         setLocationData(data);
       } catch (error) {
         console.error("Error fetching location details:", error);
