@@ -78,12 +78,12 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
       <div className="flex justify-between items-center mt-2">
         <p className="text-lg font-semibold text-black">
-          Price: <span className="text-blue-500">{locationData?.price}</span>
+          Price: <span className="text-purple-800 font-bold">{locationData?.price}</span>
         </p>
         <a
           href="https://www.google.com/maps"
           target="_blank"
-          className="text-blue-500 text-sm"
+          className="text-purple-700 underline text-sm"
         >
           View on Google Maps
         </a>
@@ -97,6 +97,56 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           className={`w-6 h-6 ${isFavorite ? "text-red-500" : "text-gray-400"}`}
         />
       </button>
+
+      {/* Resale Chart */}
+      {locationData?.resaleTrends && (
+        <div className="mt-6">
+          <h3 className="text-xl font-bold mb-3 text-black">Predicted Resale Price</h3>
+          <div className="h-[300px]">
+            <Line
+              data={{
+                labels: locationData.resaleTrends.labels,
+                datasets: [
+                  {
+                    label: "Price ($K)",
+                    data: locationData.resaleTrends.data,
+                    borderColor: "rgb(220, 38, 38)",
+                    backgroundColor: "rgba(220, 38, 38, 0.1)",
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: false,
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                },
+                scales: {
+                  y: {
+                    ticks: {
+                      callback: (val) => `${val}k`,
+                      color: "#6B7280",
+                    },
+                    grid: {
+                      color: "#e5e7eb",
+                    },
+                  },
+                  x: {
+                    ticks: { color: "#6B7280" },
+                    grid: {
+                      color: "#e5e7eb",
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Crime Rate */}
       <div className="mt-6">
