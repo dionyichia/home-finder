@@ -6,12 +6,12 @@ import { useParams, Link } from "react-router-dom";
 import { api } from "../api";
 import {
   HeartIcon,
-  ArrowLeftIcon,
   StarIcon,
   MapPinIcon,
   ClockIcon,
-  AcademicCapIcon,
   ShoppingBagIcon,
+  AcademicCapIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import { Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
@@ -44,10 +44,11 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
     fetchLocation();
   }, [locationName]);
 
-  if (!locationData) return <p className="text-black">Loading...</p>;
+  if (!locationData) return <p>Loading...</p>;
 
   return (
-    <div className="w-full max-w-[700px] p-6 pb-20 bg-white/50 backdrop-blur-lg border border-white/30 rounded-2xl shadow-xl mx-auto text-black">
+    <div className="w-full max-w-[700px] p-6 pb-20 bg-white/60 backdrop-blur-md rounded-2xl shadow-md mx-auto text-black border border-gray-200">
+      {/* Back arrow (for standalone view) */}
       {!propName && (
         <div className="flex items-center space-x-2 mb-4">
           <Link to="/" className="p-2 bg-gray-200 rounded-full">
@@ -57,9 +58,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
         </div>
       )}
 
-      <div className="w-full h-40 bg-gray-300 rounded mb-4" />
-
-      {/* Top Row: Name + Price + Heart | Rating + Stars */}
+      {/* Top Section: Name + Price on left, Rating + Link on right */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -78,13 +77,6 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           <p className="text-lg font-semibold">
             Price: <span className="text-purple-800 font-bold">{locationData?.price}</span>
           </p>
-          <a
-            href="https://www.google.com/maps"
-            target="_blank"
-            className="text-purple-700 underline text-sm mt-1 inline-block"
-          >
-            View on Google Maps
-          </a>
         </div>
 
         <div className="flex flex-col items-end gap-1">
@@ -101,72 +93,72 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
               ))}
             </div>
           </div>
+          <a
+            href="https://www.google.com/maps"
+            target="_blank"
+            className="text-purple-700 underline text-sm mt-1"
+          >
+            View on Google Maps
+          </a>
         </div>
       </div>
 
-      {/* Resale Chart */}
-      {locationData?.resaleTrends && (
-        <div className="mt-6">
-          <h3 className="text-xl font-bold mb-3">Predicted Resale Price</h3>
-          <div className="h-[300px]">
-            <Line
-              data={{
-                labels: locationData.resaleTrends.labels,
-                datasets: [
-                  {
-                    label: "Price ($K)",
-                    data: locationData.resaleTrends.data,
-                    borderColor: "rgb(220, 38, 38)",
-                    backgroundColor: "rgba(220, 38, 38, 0.1)",
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.3,
-                    fill: false,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  y: {
-                    ticks: {
-                      callback: (val) => `${val}k`,
-                      color: "#6B7280",
+      {/* Resale Price Chart */}
+      <div className="mt-6">
+        <h3 className="text-lg font-bold">Predicted Resale Price</h3>
+        <div className="h-[300px]">
+          <Line
+            data={{
+              labels: locationData?.resaleTrends?.labels,
+              datasets: [
+                {
+                  label: "Price ($K)",
+                  data: locationData?.resaleTrends?.data,
+                  borderColor: "red",
+                  borderWidth: 2,
+                  fill: false,
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              scales: {
+                y: {
+                  ticks: {
+                    callback: function (value) {
+                      return `${value}k`;
                     },
-                    grid: { color: "#e5e7eb" },
-                  },
-                  x: {
-                    ticks: { color: "#6B7280" },
-                    grid: { color: "#e5e7eb" },
                   },
                 },
-              }}
-            />
-          </div>
+              },
+            }}
+          />
         </div>
-      )}
+      </div>
 
       {/* Crime Rate */}
       <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3">Crime Rate</h3>
-        <div className="flex gap-1">
-          {Array.from({ length: 5 }, (_, i) => (
-            <StarIcon
-              key={i}
-              className={`w-6 h-6 ${
-                i < locationData.crimeRate ? "text-black" : "text-gray-300"
-              }`}
-            />
-          ))}
+        <h3 className="text-lg font-bold">Crime Rate</h3>
+        <div className="flex space-x-2 mt-2">
+          {Array(locationData?.crimeRate)
+            .fill(null)
+            .map((_, index) => (
+              <StarIcon key={index} className="w-6 h-6 text-black" />
+            ))}
+          {Array(5 - locationData?.crimeRate)
+            .fill(null)
+            .map((_, index) => (
+              <StarIcon key={index} className="w-6 h-6 text-gray-300" />
+            ))}
         </div>
       </div>
 
-      {/* Schools */}
+      {/* Nearest Schools */}
       <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-          <AcademicCapIcon className="w-5 h-5 text-blue-500" />
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          <AcademicCapIcon className="w-5 h-5 text-indigo-600" />
           Nearest Schools
         </h3>
         {locationData?.nearestSchools.map((school: NearbyPlace, index: number) => (
@@ -176,37 +168,34 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           >
             <div>
               <h4 className="font-bold">{school.name}</h4>
-              <p className="text-gray-800 flex items-center">
+              <p className="text-gray-600 flex items-center">
                 <MapPinIcon className="w-4 h-4 mr-1" /> {school.distance} from Location
               </p>
             </div>
-            <p className="text-gray-800 flex items-center">
+            <p className="text-gray-600 flex items-center">
               <ClockIcon className="w-4 h-4 mr-1" /> {school.time}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Malls */}
+      {/* Nearest Malls */}
       <div className="mt-6">
-        <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+        <h3 className="text-lg font-bold flex items-center gap-2">
           <ShoppingBagIcon className="w-5 h-5 text-pink-500" />
           Nearest Malls
         </h3>
         {locationData?.nearestMalls.map((mall: NearbyPlace, index: number) => (
           <div
             key={index}
-            className={`bg-gray-100 p-4 rounded-lg mt-2 flex justify-between ${
-              index === locationData.nearestMalls.length - 1 ? "mb-6" : ""
-            }`}
+            className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"
           >
             <h4 className="font-bold">{mall.name}</h4>
-            <p className="text-gray-800 flex items-center">
+            <p className="text-gray-600 flex items-center">
               <ClockIcon className="w-4 h-4 mr-1" /> {mall.distance}
             </p>
           </div>
         ))}
-        <div className="h-8" />
       </div>
     </div>
   );

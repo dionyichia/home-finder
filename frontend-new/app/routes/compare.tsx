@@ -46,15 +46,18 @@ const Compare = () => {
     }, 10);
   };
 
+  const shouldShowScrollTip = triggerCompare && locationA && locationB;
+  const shouldShowMainTip = !(locationA && locationB && triggerCompare);
+
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-start pl-20 p-6 bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] text-black overflow-auto">
-      {/* ✨ Clean, centered title */}
+    <div className="h-screen w-full flex flex-col items-center justify-start pl-20 p-6 bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] text-black overflow-hidden">
+      {/* Title */}
       <h2 className="text-4xl font-semibold text-center text-gray-900 tracking-tight mb-4">
         Compare Locations
       </h2>
 
-      {/* 📍 Centered inputs & button */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-6 w-full max-w-xl mx-auto">
+      {/* Input Fields + Button */}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-4 w-full max-w-xl mx-auto">
         <input
           type="text"
           placeholder="Enter Location A"
@@ -77,30 +80,35 @@ const Compare = () => {
         </button>
       </div>
 
-      {/* 💡 Tip below inputs */}
-      <div className="text-sm text-gray-600 mb-6 text-center w-full max-w-3xl">
-        Tip: Enter two location names and press Compare to view their details side by side.
+      {/* Tips */}
+      <div className="text-sm text-gray-600 mb-4 text-center w-full max-w-3xl">
+        {shouldShowMainTip && (
+          <p>Tip: Enter two location names and press Compare to view their details side by side.</p>
+        )}
+        {shouldShowScrollTip && (
+          <p>Hover your mouse pointer over the cards and scroll to see more details.</p>
+        )}
       </div>
 
-      {/* 📊 Comparison section */}
-      <div className="flex flex-col md:flex-row gap-10 w-full max-w-7xl justify-center items-stretch">
+      {/* Cards */}
+      <div className="flex flex-col md:flex-row gap-10 w-full max-w-7xl justify-center items-stretch h-[80vh]">
         {triggerCompare && locationA && (
-          <div className="flex-1 max-h-[80vh] overflow-hidden rounded-xl">
+          <div className="flex-1 overflow-hidden rounded-xl">
             <div
               ref={scrollRefA}
               onScroll={() => syncScroll("A")}
-              className="h-full overflow-y-auto p-4"
+              className="h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500"
             >
               <ViewLocation locationName={locationA} />
             </div>
           </div>
         )}
         {triggerCompare && locationB && (
-          <div className="flex-1 max-h-[80vh] overflow-hidden rounded-xl">
+          <div className="flex-1 overflow-hidden rounded-xl">
             <div
               ref={scrollRefB}
               onScroll={() => syncScroll("B")}
-              className="h-full overflow-y-auto p-4"
+              className="h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500"
             >
               <ViewLocation locationName={locationB} />
             </div>
