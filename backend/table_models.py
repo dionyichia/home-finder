@@ -23,6 +23,7 @@ def create_database():
         num_transport REAL,
         num_malls REAL,
         num_schools REAL,
+        importance_rank TEXT,
         FOREIGN KEY (user_id) REFERENCES users (user_id)
     )
     ''')
@@ -94,4 +95,33 @@ def create_database():
     conn.commit()
     conn.close()
 
-create_database()
+def reset_preferences_table():
+    """Deletes all rows from the preferences table while keeping the structure intact."""
+    cursor.execute("DELETE FROM preferences;")  # Clears all data
+    conn.commit()  # Commit before running VACUUM
+    cursor.execute("VACUUM;")  # Reclaims space
+    conn.commit()
+    print("Preferences table has been reset.")
+
+def reset_users_table():
+    """Deletes all rows from the users table while keeping the structure intact."""
+    cursor.execute("DELETE FROM users;")  # Clears all data
+    conn.commit()  # Commit before running VACUUM
+    cursor.execute("VACUUM;")  # Reclaims space
+    conn.commit()
+    print("users table has been reset.")
+
+
+if __name__ == "__main__":
+    # create_database()
+
+    # Database connection
+    conn = sqlite3.connect("app.db")  # Single database file
+    cursor = conn.cursor()
+
+    reset_preferences_table()
+    reset_users_table()
+
+    # Close connection
+    conn.close()
+    

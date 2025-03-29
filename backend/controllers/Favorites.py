@@ -2,7 +2,7 @@ import sqlite3
 import os
 from typing import List, Dict, Any, Optional
 
-class Favorites:
+class FavoritesController:
     @staticmethod
     def get_db_path(db_name='app.db'):
         """Returns the database path based on the provided name"""
@@ -20,7 +20,7 @@ class Favorites:
         Returns:
             A list of dictionaries containing favorite location information
         """
-        db_path = Favorites.get_db_path(db_name)
+        db_path = FavoritesController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row  # This enables column access by name
         cursor = conn.cursor()
@@ -56,7 +56,7 @@ class Favorites:
         Returns:
             Boolean indicating success
         """
-        db_path = Favorites.get_db_path(db_name)
+        db_path = FavoritesController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -99,7 +99,7 @@ class Favorites:
         Returns:
             Boolean indicating success
         """
-        db_path = Favorites.get_db_path(db_name)
+        db_path = FavoritesController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -135,7 +135,7 @@ class Favorites:
         Returns:
             Number of favorites the user has
         """
-        db_path = Favorites.get_db_path(db_name)
+        db_path = FavoritesController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -162,7 +162,7 @@ class Favorites:
         Returns:
             Boolean indicating if the location is a favorite
         """
-        db_path = Favorites.get_db_path(db_name)
+        db_path = FavoritesController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         

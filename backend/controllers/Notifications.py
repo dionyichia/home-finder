@@ -2,7 +2,7 @@ import sqlite3
 import os
 from typing import List, Dict, Any, Optional
 
-class Notifications:
+class NotificationsController:
     @staticmethod
     def get_db_path(db_name='app.db'):
         """Returns the database path based on the provided name"""
@@ -22,7 +22,7 @@ class Notifications:
         Returns:
             Boolean indicating success
         """
-        db_path = Notifications.get_db_path(db_name)
+        db_path = NotificationsController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -74,7 +74,7 @@ class Notifications:
         Returns:
             Boolean indicating success
         """
-        db_path = Notifications.get_db_path(db_name)
+        db_path = NotificationsController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -127,7 +127,7 @@ class Notifications:
             print(f"Invalid notification type: {notification_type}. Must be one of {valid_types}")
             return []
         
-        db_path = Notifications.get_db_path(db_name)
+        db_path = NotificationsController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -166,7 +166,7 @@ class Notifications:
         Returns:
             List of dictionaries with notification information
         """
-        db_path = Notifications.get_db_path(db_name)
+        db_path = NotificationsController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row  # This enables column access by name
         cursor = conn.cursor()
@@ -201,7 +201,7 @@ class Notifications:
         Returns:
             Status string ('enabled', 'disabled', or 'not_set')
         """
-        db_path = Notifications.get_db_path(db_name)
+        db_path = NotificationsController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         

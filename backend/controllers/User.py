@@ -103,7 +103,7 @@ class UserController:
         """
         Verifies user login credentials.
 
-        Returns: User ID if valid, False otherwise.
+        Returns: User ID if valid, None otherwise.
         """
         db_path = UserController.get_db_path()
         
@@ -114,7 +114,103 @@ class UserController:
                 cursor.execute(query, (username, email, password))
                 result = cursor.fetchone()
                 
-            return result is not None
+                if result:
+                    return result[0]  # Return the user_id
+                return None
+            
         except Exception as e:
             print(f"Error occurred: {e}")
+            return None
+
+    @staticmethod
+    def delete_user(user_id: int) -> bool:
+        """
+        Deletes a user and all associated data (preferences, favorites, notifications).
+        
+        Returns: True if deletion is successful, False if an error occurs.
+        """
+        db_path = UserController.get_db_path()
+        
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Start transaction
+                cursor.execute("BEGIN TRANSACTION")
+                
+                # Delete from preferences table
+                cursor.execute("DELETE FROM preferences WHERE user_id = ?", (user_id,))
+                
+                # Delete from favourites table
+                cursor.execute("DELETE FROM favourites WHERE user_id = ?", (user_id,))
+                
+                # Delete from notifications table
+                cursor.execute("DELETE FROM notifications WHERE user_id = ?", (user_id,))
+                
+                # Finally delete the user
+                cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+                
+                # Commit transaction
+                cursor.execute("COMMIT")
+                
+                return True
+        except Exception as e:
+            print(f"Error occurred during user deletion: {e}")
+            
+            # Roll back transaction if an error occurs
+            try:
+                cursor.execute("ROLLBACK")
+            except:
+                pass
+                
             return False
+        
+    @staticmethod
+    def get_user_id(username: str, email: str):
+        """
+        Get a user's ID by their username and email.
+        
+        Returns: User ID if found, None if not found or an error occurs.
+        """
+        db_path = UserController.get_db_path()
+        
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                query = "SELECT user_id FROM users WHERE username = ? AND email = ?"
+                cursor.execute(query, (username, email))
+                result = cursor.fetchone()
+                
+                if result:
+                    return result[0]
+                return None
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return None
+        
+    @staticmethod
+    def get_user_login_details(user_id: int) -> dict:
+        """
+        Get user details by ID.
+        
+        Returns: Dict with user details if found, None if not found or an error occurs.
+        """
+        db_path = UserController.get_db_path()
+        
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                query = "SELECT user_id, username, email FROM users WHERE user_id = ?"
+                cursor.execute(query, (user_id,))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        "user_id": result[0],
+                        "username": result[1],
+                        "email": result[2]
+                    }
+                return None
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return None

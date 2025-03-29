@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import json
 
 class PreferenceController:
     """
@@ -26,7 +27,7 @@ class PreferenceController:
                 cursor = conn.cursor()
                 
                 # Query to get all preferences for the user
-                query = "SELECT user_id, crime_rate, resale_price, num_schools, num_malls, num_transport, importance_rank FROM preferences WHERE user_id = ?"
+                query = "SELECT user_id, crime_rate, price, num_schools, num_malls, num_transport, importance_rank FROM preferences WHERE user_id = ?"
                 cursor.execute(query, (user_id,))
                 
                 # Fetch the result
@@ -37,11 +38,11 @@ class PreferenceController:
                     return {
                         'user_id': result[0],
                         'crime_rate': result[1],
-                        'resale_price': result[2],
+                        'price': result[2],
                         'num_schools': result[3],
                         'num_malls': result[4],
                         'num_transport': result[5],
-                        'importance_rank': result[6]
+                        'importance_rank': json.loads(result[6])
                     }
                 return None
         except Exception as e:
@@ -52,19 +53,19 @@ class PreferenceController:
     def add_user_preferences(user_id: int, preferences: list, db_name='app.db'):
         """
         Adds or updates user preferences in the PreferenceDB
-        Args: user_id, preferences (list containing crime_rate, resale_price, 
+        Args: user_id, preferences (list containing crime_rate, price, 
             num_schools, num_malls, num_transport, importance_rank),
             db_name (optional)
         Return: True if operation is successful, False if some error occurs.
         """
         db_path = PreferenceController.get_db_path(db_name)
         
-        crime_rate = preferences['crime']
-        resale_price = preferences['price']
+        crime_rate = preferences['crime_rate']
+        price = preferences['price']
         num_schools = preferences['schools']
         num_malls = preferences['malls']
         num_transport = preferences['transport']
-        importance_rank = preferences['importance_rank']
+        importance_rank = json.dumps(preferences['importance_rank'])
 
         try:
             # Establish a database connection
@@ -79,12 +80,12 @@ class PreferenceController:
                     # Update the existing user preferences
                     update_query = """
                     UPDATE preferences 
-                    SET crime_rate = ?, resale_price = ?, 
+                    SET crime_rate = ?, price = ?, 
                         num_schools = ?, num_malls = ?, 
                         num_transport = ?, importance_rank = ? 
                     WHERE user_id = ?
                     """
-                    cursor.execute(update_query, (crime_rate, resale_price, 
+                    cursor.execute(update_query, (crime_rate, price, 
                                                 num_schools, num_malls, 
                                                 num_transport, importance_rank, 
                                                 user_id))
@@ -92,12 +93,12 @@ class PreferenceController:
                     # Insert the new user preferences into the preferences table
                     insert_query = """
                     INSERT INTO preferences 
-                        (user_id, crime_rate, resale_price, 
+                        (user_id, crime_rate, price, 
                         num_schools, num_malls, num_transport, 
                         importance_rank) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     """
-                    cursor.execute(insert_query, (user_id, crime_rate, resale_price, 
+                    cursor.execute(insert_query, (user_id, crime_rate, price, 
                                                 num_schools, num_malls, 
                                                 num_transport, importance_rank))
 
