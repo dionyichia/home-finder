@@ -10,6 +10,53 @@ export interface ScoredLocation {
   score: number;
 }
 
+export interface UserPreferences {
+  price: string;
+  crime_rate: string;
+  schools: string;
+  malls: string;
+  transport: string;
+  importance_rank: string;
+}
+
+export interface UserRegistrationData {
+  username: string;
+  user_email: string;
+  password: string;
+  price: string;
+  crime_rate: string;
+  schools: string;
+  malls: string;
+  transport: string;
+  importance_rank: string;
+}
+
+export interface UserCredentials {
+  username: string;
+  user_email: string;
+  password: string;
+}
+
+export interface UserUpdateData {
+  user_id: number;
+  new_username: string;
+  new_user_email: string;
+  new_password: string;
+  price: string;
+  crime_rate: string;
+  schools: string;
+  malls: string;
+  transport: string;
+  importance_rank: string;
+}
+
+export interface UserProfile {
+  user: Record<string, any>;
+  preferences: UserPreferences;
+  favorites_count: number;
+  notifications_count: number;
+}
+
 export const api = {
   /**
    * Get all locations geodata
@@ -25,9 +72,9 @@ export const api = {
   },
 
   /**
-   * Get all locations sorted by a specific category, 
+   * Get all locations sorted by a specific category
    */
-  getSortedLocations: async (sortBy: string): Promise<any[]> => {
+  getSortedLocations: async (sortBy: string): Promise<ScoredLocation[]> => {
     const response = await fetch(`${API_BASE_URL}/sort?sort_by=${sortBy}`);
 
     if (!response.ok) {
@@ -40,7 +87,7 @@ export const api = {
   /**
    * Search for a location by name
    */
-  searchLocation: async (locationName: string) => {
+  searchLocation: async (locationName: string): Promise<Record<string, any>> => {
     const response = await fetch(`${API_BASE_URL}/search?location_name=${encodeURIComponent(locationName)}`);
     
     if (!response.ok) {
@@ -51,19 +98,260 @@ export const api = {
   },
   
   /**
-   * Get user preferences (based on your useEffect code)
+   * Register a new user
    */
-  getPreferences: async () => {
-    const response = await fetch(`${API_BASE_URL}/preferences`);
+  registerUser: async (userData: UserRegistrationData): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
     
     if (!response.ok) {
-      throw new Error(`Error fetching preferences: ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Registration failed: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Verify user credentials
+   */
+  verifyUser: async (credentials: UserCredentials): Promise<{ message: string, user_id: number }> => {
+    const response = await fetch(`${API_BASE_URL}/verify_user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Verification failed: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Update user information
+   */
+  updateUserInfo: async (userData: UserUpdateData): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/update_user_info`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Update failed: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Remove a user account
+   */
+  removeUser: async (credentials: UserCredentials): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/remove_user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Account removal failed: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Get user profile
+   */
+  getUserProfile: async (userId: number): Promise<UserProfile> => {
+    const response = await fetch(`${API_BASE_URL}/get_user_profile`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to fetch user profile: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Get user favorites
+   */
+  getUserFavorites: async (userId: number): Promise<{ favorites: any[] }> => {
+    const response = await fetch(`${API_BASE_URL}/get_user_favourites`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to fetch favorites: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Add a location to favorites
+   */
+  addToFavorites: async (userId: number, locationName: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/add_to_favourites`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        location_name: locationName,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to add to favorites: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Remove a location from favorites
+   */
+  removeFromFavorites: async (userId: number, locationName: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/remove_from_favourites`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        location_name: locationName,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to remove from favorites: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Enable notifications for a location
+   */
+  enableNotification: async (userId: number, locationName: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/enable_notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        location_name: locationName,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to enable notification: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Disable notifications for a location
+   */
+  disableNotification: async (userId: number, locationName: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/disable_notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        location_name: locationName,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to disable notification: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Get user notifications
+   */
+  getUserNotifications: async (userId: number): Promise<{ notifications: any[] }> => {
+    const response = await fetch(`${API_BASE_URL}/get_user_notifications`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to fetch notifications: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Send notifications for a location
+   */
+  sendNotifications: async (locationName: string, notificationType: string): Promise<{ message: string, notified_users: number }> => {
+    const response = await fetch(`${API_BASE_URL}/send_notifications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        location_name: locationName,
+        notification_type: notificationType,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to send notifications: ${response.statusText}`);
     }
     
     return response.json();
   }
 };
-
 
 // const API_BASE_URL = 'http://127.0.0.1:5000';
 

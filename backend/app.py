@@ -167,8 +167,9 @@ def remove_user():
     
 @app.route('/get_user_profile', methods=['GET'])
 def get_user_profile():
-    data = request.get_json()
-    user_id = data['user_id']
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"message": "User ID is required!"}), 400
     
     # Get user details
     user_details = User.UserController.get_user_login_details(user_id)
@@ -197,8 +198,9 @@ def get_user_profile():
 # Get user favorites route
 @app.route('/get_user_favourites', methods=['GET'])
 def get_user_favourites():
-    data = request.get_json()
-    user_id = data['user_id']
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"message": "User ID is required!"}), 400
     
     favorites = Favorites.FavoritesController.get_favourites(user_id)
     
@@ -262,8 +264,9 @@ def disable_notification():
 
 @app.route('/get_user_notifications', methods=['GET'])
 def get_user_notifications():
-    data = request.get_json()
-    user_id = data['user_id']
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"message": "User ID is required!"}), 400
     
     notifications = Notifications.NotificationsController.get_user_notifications(user_id)
     
