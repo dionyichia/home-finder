@@ -56,14 +56,14 @@ const SearchBar = () => {
   return (
     <div className="flex flex-col gap-2"> {/* Container for the search bar elements with flexbox layout. */}
       <div className="relative"> {/* Relative positioning for the input and button. */}
-        <input
-          type="text" // Input type is text for search queries.
-          value={query} // The value of the input is controlled by the query state.
-          onChange={(e) => setQuery(e.target.value)} // Update the query state when the input changes.
-          onKeyDown={handleKeyDown} // Call handleKeyDown on key down events.
-          placeholder="Search For Location" // Placeholder text for the input field.
-          className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-400" // Styling for the input field.
-        />
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Search For Location"
+        className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+      />
         <button
           onClick={handleSearch} // Call handleSearch when the button is clicked.
           className="absolute right-2 top-2 text-gray-500 hover:text-purple-600" // Styling for the search button.

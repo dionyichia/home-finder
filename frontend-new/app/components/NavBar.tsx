@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, XMarkIcon, DocumentMagnifyingGlassIcon, HeartIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, XMarkIcon, DocumentMagnifyingGlassIcon, HeartIcon, GlobeAltIcon, UserCircleIcon} from '@heroicons/react/24/outline';
 import SummarisedLocation from './sidebar/SummarisedLocation';
 import { useMap } from '~/contexts/MapContext';
 
@@ -66,6 +66,10 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
           <a href="/favourites" className="flex flex-col items-center hover:text-purple-900 px-2 py-2">
             <HeartIcon className="h-6 w-6" />
             <span className="mt-1 text-[8px]">Favourites</span>
+          </a>
+          <a href="/profile" className="flex flex-col items-center hover:text-purple-900 px-2 py-2">
+            <UserCircleIcon className="h-6 w-6" />
+            <span className="mt-1 text-[8px]">Profile</span>
           </a>
         </div>
       </div>

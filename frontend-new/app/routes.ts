@@ -4,4 +4,5 @@ export default [
     index("routes/explore.tsx"), 
     route("compare", "routes/compare.tsx"),
     route("favourites", "routes/favourites.tsx"),
+    route("profile", "routes/profile.tsx"),
 ] satisfies RouteConfig;

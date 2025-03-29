@@ -7,11 +7,15 @@
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-white 
+  /* @apply bg-white dark:bg-gray-950;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
-  }
+  } */
+
+  /* If anyone is curious, I commented out the above code because darkmode is a pain in the ass :)
+  ~ Ian */
 }
 
 /* Global CSS or styles file */
