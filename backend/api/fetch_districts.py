@@ -281,19 +281,12 @@ def get_location_geodata(location_name: str, db_path=DB_PATH):
     
     return None  # Return None if location is not found
 
-
 def get_all_locations_geodata(db_path=DB_PATH):
-    """
-    Return: list of dicts, each location has 1 dict, with key as location name and value as location coordinates.
-    """
     result = []
     try:
-        # Establish a database connection
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            
-            # Query to get all locations and their coordinates
             query = "SELECT location_name, coordinates FROM location_details"
             cursor.execute(query)
             
@@ -301,7 +294,26 @@ def get_all_locations_geodata(db_path=DB_PATH):
             for row in rows:
                 location_name = row['location_name']
                 coordinates = json.loads(row['coordinates'])
-                result.append({location_name: coordinates})
+
+                # Ensure coordinates are in the correct format
+                if isinstance(coordinates, list) and len(coordinates) > 0:
+                    # Extract the innermost coordinate array
+                    while isinstance(coordinates[0][0], list):
+                        coordinates = coordinates[0]
+                        
+                    # # Make sure coordinates form a closed loop
+                    # if coordinates[0] != coordinates[-1]:
+                    #     coordinates.append(coordinates[0])
+
+                     # Debug log
+                    # print(f"Raw coordinates for {location_name}:", coordinates)
+                    
+                    result.append({
+                        "location_name": location_name,
+                        "geodata": coordinates
+                    })
+                else:
+                    print(f"Warning: Invalid coordinates format for location {location_name}")
                 
     except Exception as e:
         print(f"Error: {e}")

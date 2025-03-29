@@ -23,6 +23,10 @@ interface MapContextType {
   };
   locations_geodata: LocationGeoData[]; 
   isLoading: boolean;
+  activeCategory: any;
+  overlaySourceData: any;
+  setOverlaySourceData: (data: any) => void;
+  filterLocationsByCategory: (data: any) => void;
   updateMapState: (mapInstance: any) => void;
   initializeMap: (container: HTMLElement) => void;
   destroyMap: () => void; 
@@ -41,18 +45,14 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
   });
   const [mapInitialized, setMapInitialized] = useState(false);
 
-    // Debug unmounting
-    useEffect(() => {
-      console.log('Map component mounted');
-
-      return () => {
-          console.log('Map component unmounting');
-      };
-    }, []);
-
+  // Debug unmounting
   useEffect(() => {
-    console.log("Map state updated:", mapState);
-  }, [mapState]);
+    console.log('Map component mounted');
+
+    return () => {
+        console.log('Map component unmounting');
+    };
+  }, []);
 
   // Safely load mapboxgl only on client-side
   useEffect(() => {
@@ -67,27 +67,8 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
     }
     
     loadMapbox();
+    console.log("Mapbox loaded");
   }, []);
-
-  // Load saved map state from session storage
-  // useEffect(() => {
-  //   console.log("Trying to load from session storage")
-  //   try {
-  //     const savedMapState = sessionStorage.getItem("mapState");
-  //     console.log("Loading saved Mapstate" ,savedMapState)
-
-  //     if (savedMapState) {
-  //       const parsedMapState = JSON.parse(savedMapState)
-  //       console.log("parsedMapState" , parsedMapState)
-  //       setMapState(parsedMapState);
-  //     }
-
-  //     console.log("Final saved Mapstate" ,mapState)
-
-  //   } catch (e) {
-  //     console.error("Error loading saved map state:", e);
-  //   }
-  // }, []);
 
   // Fetch locations data
   useEffect(() => {
@@ -95,7 +76,7 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
       try {
         setIsLoading(true);
         const data = await api.getAllLocationsGeodata();
-        // setLocationsGeodata(data);
+        setLocationsGeodata(data);
         console.log("getting data from backend")
       } catch (error) {
         console.error('Error fetching location data:', error);
@@ -105,6 +86,7 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
     };
     
     fetchLocations();
+    console.log("location geodata loaded");
   }, []);
 
   // Save map state to session storage when it changes
@@ -143,23 +125,28 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
 
   // Initialize map function
   const initializeMap = useCallback((container: HTMLElement) => {
-    console.log("Initilize Map");
+    console.log("Trying to initilize Map");
 
-    // Return early if mapboxgl hasn't loaded yet
-    if (!mapboxgl) {
-      console.warn("Mapbox GL not loaded yet");
+    if (!container) {
+      console.error('Container element is null');
       return;
     }
-    
-    // Don't initialize if already exists
+
+    if (!mapboxgl) {
+        console.error('Mapbox GL not loaded yet');
+        return;
+    }
+
     if (mapInstance.current) {
-      console.log("Map container alr exist");
-      return;
+        console.log('Map already initialized');
+        return;
     }
 
     const parsedMapState = loadFromSessionStorage() || mapState; 
 
     try {
+
+      console.log("Can Initilize Map");
 
       mapInstance.current = new mapboxgl.Map({
         container,
@@ -180,7 +167,6 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
   }, []);
 
   const updateMapState = useCallback((mapInstance: any) => {
-    console.log(mapInstance)
 
     if (!mapboxgl || !mapInstance.current) {
       console.warn("Mapbox GL not loaded yet");
@@ -206,6 +192,18 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
     }
   }, []);
 
+
+  // this for category button and switching sorting category
+  const [activeCategory, setActiveCategory] = useState(null);
+
+  const filterLocationsByCategory = (category: any) => {
+    setActiveCategory(category);
+    // You might want to update the map display here or let components handle it
+  };
+
+  // this is for the reloading the markers on each polygon and location
+  const [overlaySourceData, setOverlaySourceData] = useState<any>(null);
+
   return (
     <MapContext.Provider 
       value={{ 
@@ -213,6 +211,10 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
         mapState, 
         locations_geodata,
         isLoading,
+        activeCategory,
+        overlaySourceData,
+        setOverlaySourceData,
+        filterLocationsByCategory,
         updateMapState,
         initializeMap,
         destroyMap, 

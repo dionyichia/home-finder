@@ -1,3 +1,3 @@
 export default function favourites () {
-    return <>Hoii</>
+    return <h1>Hiiiiiiiiiiiii!!!jsdjfsjdhfksj</h1>
 }

@@ -13,3 +13,23 @@ body {
     color-scheme: dark;
   }
 }
+
+/* Global CSS or styles file */
+.location-bubble {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.location-bubble:hover {
+  transform: scale(1.05);
+}
+
+.location-bubble p {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.location-bubble.expanded p {
+  max-height: 300px;
+}

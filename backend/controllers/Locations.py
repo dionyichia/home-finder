@@ -111,8 +111,7 @@ class LocationsController:
         Return: List of dicts, each location 1 dict
         """
         return fetch_districts.get_all_locations_geodata()
-
-
+    
     @staticmethod
     def sort_by_category(sorting_category, user_id=None):
         """

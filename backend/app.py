@@ -15,16 +15,16 @@ def get_all_coords():
     """
     Return: Jsonified List of list of dicts, {location name: their geodata}
     """
-    ranked_locations = Locations.LocationsController.get_all_locations_geojson()
+    locations = Locations.LocationsController.get_all_locations_geojson()
 
-    # Return list of ranked locations
-    return jsonify(ranked_locations)
+    # Return list of locations
+    return jsonify(locations)
 
 # Route to get and display all location information
 @app.route('/sort', methods=['GET'])
 def get_all_locations():
     """
-    Return: Jsonified List of list of tuples, (ranked location, their score)
+    Return: Jsonified List of list of tuples, (ranked location, their score), location is a dict of location, each db coloumn headder is a key.
     """
     # Get data sent in request
     sorting_category = request.args.get('sort_by', default=None)
