@@ -40,15 +40,15 @@ export const api = {
   /**
    * Search for a location by name
    */
-  // searchLocation: async (locationName: string) => {
-  //   const response = await fetch(`${API_BASE_URL}/search?location_name=${encodeURIComponent(locationName)}`);
+  searchLocation: async (locationName: string) => {
+    const response = await fetch(`${API_BASE_URL}/search?location_name=${encodeURIComponent(locationName)}`);
     
-  //   if (!response.ok) {
-  //     throw new Error(`Error searching for location: ${response.statusText}`);
-  //   }
+    if (!response.ok) {
+      throw new Error(`Error searching for location: ${response.statusText}`);
+    }
     
-  //   return response.json();
-  // },
+    return response.json();
+  },
   
   /**
    * Get user preferences (based on your useEffect code)
@@ -140,84 +140,84 @@ export const api = {
 // };
 
 
-const API_BASE_URL = 'http://127.0.0.1:5000';
+// const API_BASE_URL = 'http://127.0.0.1:5000';
 
-export interface LocationGeoData {
-  location_name: string;
-  geodata: any[]; 
-}
+// export interface LocationGeoData {
+//   location_name: string;
+//   geodata: any[]; 
+// }
 
-export interface ScoredLocation {
-  location: Record<string, any>; 
-  score: number;
-}
+// export interface ScoredLocation {
+//   location: Record<string, any>; 
+//   score: number;
+// }
 
-export const api = {
-  /**
-   * Get all locations geodata
-   */
-  getAllLocationsGeodata: async (): Promise<LocationGeoData[]> => {
-  //   const response = await fetch(${API_BASE_URL}/get_all_coords);
+// export const api = {
+//   /**
+//    * Get all locations geodata
+//    */
+//   getAllLocationsGeodata: async (): Promise<LocationGeoData[]> => {
+//   //   const response = await fetch(${API_BASE_URL}/get_all_coords);
 
-  //   if (!response.ok) {
-  //     throw new Error(Error fetching locations geodata: ${response.statusText});
-  //   }
+//   //   if (!response.ok) {
+//   //     throw new Error(Error fetching locations geodata: ${response.statusText});
+//   //   }
 
-  //   return response.json();
+//   //   return response.json();
 
-  return [{location_name: "test", geodata: []}]
-},
+//   return [{location_name: "test", geodata: []}]
+// },
 
-  /**
-   * Get all locations sorted by a specific category
-   */
-  getSortedLocations: async (sortBy: string): Promise<ScoredLocation[]> => {
-  //   const response = await fetch(${API_BASE_URL}/sort?sort_by=${sortBy});
+//   /**
+//    * Get all locations sorted by a specific category
+//    */
+//   getSortedLocations: async (sortBy: string): Promise<ScoredLocation[]> => {
+//   //   const response = await fetch(${API_BASE_URL}/sort?sort_by=${sortBy});
 
-  //   if (!response.ok) {
-  //     throw new Error(Error fetching sorted locations: ${response.statusText});
-  //   }
+//   //   if (!response.ok) {
+//   //     throw new Error(Error fetching sorted locations: ${response.statusText});
+//   //   }
 
-  //   return response.json();
+//   //   return response.json();
 
-  return [{location: { test: null }, score: 0}]
-  },
+//   return [{location: { test: null }, score: 0}]
+//   },
   
-  /**
- * Search for a location by name
- */
-  searchLocation: async (locationName: string) => {
-    return {
-      name: locationName,
-      price: "$500K",
-      resaleTrends: {
-        labels: ["2020", "2021", "2022"],
-        data: [480, 490, 500],
-      },
-      crimeRate: 3,
-      nearestSchools: [
-        { name: "School A", distance: "500m", time: "7 mins" },
-        { name: "School B", distance: "800m", time: "10 mins" },
-      ],
-      nearestMalls: [
-        { name: "Mall X", distance: "1.2km" },
-        { name: "Mall Y", distance: "2km" },
-      ],
-    };
-  },
+//   /**
+//  * Search for a location by name
+//  */
+//   searchLocation: async (locationName: string) => {
+//     return {
+//       name: locationName,
+//       price: "$500K",
+//       resaleTrends: {
+//         labels: ["2020", "2021", "2022"],
+//         data: [480, 490, 500],
+//       },
+//       crimeRate: 3,
+//       nearestSchools: [
+//         { name: "School A", distance: "500m", time: "7 mins" },
+//         { name: "School B", distance: "800m", time: "10 mins" },
+//       ],
+//       nearestMalls: [
+//         { name: "Mall X", distance: "1.2km" },
+//         { name: "Mall Y", distance: "2km" },
+//       ],
+//     };
+//   },
   
-  /**
-   * Get user preferences (based on your useEffect code)
-   */
-  getPreferences: async () => {
-    // const response = await fetch(${API_BASE_URL}/preferences);
+//   /**
+//    * Get user preferences (based on your useEffect code)
+//    */
+//   getPreferences: async () => {
+//     // const response = await fetch(${API_BASE_URL}/preferences);
     
-    // if (!response.ok) {
-    //   throw new Error(Error fetching preferences: ${response.statusText});
-    // }
+//     // if (!response.ok) {
+//     //   throw new Error(Error fetching preferences: ${response.statusText});
+//     // }
     
-    // return response.json();
+//     // return response.json();
 
-    return {preferences: []}
-  }
-};
+//     return {preferences: []}
+//   }
+// };
