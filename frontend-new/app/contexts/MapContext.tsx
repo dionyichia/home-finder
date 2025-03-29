@@ -30,6 +30,8 @@ interface MapContextType {
   filterLocationsByCategory: (data: any) => void;
   overlaySourceData: any;
   setOverlaySourceData: (data: any) => void;
+  setSelectedLocation: (callback: (locationName: string) => void) => void;
+  selectedLocationCallback: ((locationName: string) => void) | null;
 }
   
 const MapContext = createContext<MapContextType | null>(null);
@@ -203,6 +205,13 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
   // this is for the reloading the markers on each polygon and location
   const [overlaySourceData, setOverlaySourceData] = useState<any>(null);
 
+  // this is to amend the search location on user clicking the location on the map 
+  const [selectedLocationCallback, setSelectedLocationCallback] = useState<((locationName: string) => void) | null>(null);
+  // Set the callback function for when a location is selected
+  const setSelectedLocation = useCallback((callback: (locationName: string) => void) => {
+    setSelectedLocationCallback(() => callback);
+  }, []);
+
   return (
     <MapContext.Provider 
       value={{ 
@@ -217,6 +226,8 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
         filterLocationsByCategory,
         overlaySourceData,
         setOverlaySourceData,
+        setSelectedLocation,
+        selectedLocationCallback,
       }}
     >
       {children}

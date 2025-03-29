@@ -9,10 +9,11 @@ import CollapsibleNavBar from '~/components/NavBar';
 import { api } from '~/api';
 import { useLocationBubbles } from '~/hooks/useLocationBubbles';
 import { useSideBar } from '~/hooks/useSideBar';
+import { useRefocusMap } from '~/hooks/useRefocusMap';
 
 export default function Explore() {
     const mapContainer = useRef<HTMLDivElement>(null);
-    const { mapInstance, mapState, locations_geodata, isLoading, overlaySourceData, initializeMap, updateMapState, destroyMap} = useMap();
+    const { mapInstance, mapState, locations_geodata, isLoading, overlaySourceData, initializeMap, updateMapState, destroyMap, selectedLocationCallback} = useMap();
     const [activeCategory, setActiveCategory] = useState<string>('price');
     const [isMapLoaded, setIsMapLoaded] = useState(false);
     const [domReady, setDomReady] = useState(false);
@@ -105,6 +106,11 @@ export default function Explore() {
 
         fetchSortedLocations();
     }, [activeCategory, overlaySourceData]);
+
+    const { refocusMap, refocusByLocationName, initializeMapClickHandlers } = useRefocusMap(
+        mapInstance,
+        selectedLocationCallback
+      );
 
     // Loading state
     if (isLoading) {

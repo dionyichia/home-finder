@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMap } from '~/contexts/MapContext';
+import { useRefocusMap } from '~/hooks/useRefocusMap';
 
 interface SummarisedLocationProps {
   locationData: {
@@ -23,6 +25,8 @@ export default function SummarisedLocation({
   activeCategory 
 }: SummarisedLocationProps) {
   const navigate = useNavigate();
+  const { mapInstance, selectedLocationCallback } = useMap();
+  const { refocusByLocationName } = useRefocusMap(mapInstance, selectedLocationCallback);
   
   // Format the score to 2 decimal places
   const formattedScore = score.toFixed(2);
@@ -69,8 +73,22 @@ export default function SummarisedLocation({
     });
   };
 
+  // Handle location card click to focus map on this location
+  const handleLocationClick = (event: React.MouseEvent) => {
+    // Prevent the click from bubbling up to parent elements
+    event.stopPropagation();
+    
+    // Only trigger refocus if the click wasn't on the button
+    if (!(event.target as HTMLElement).closest('button')) {
+      refocusByLocationName(locationData.location_name);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
+    <div 
+      className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      onClick={handleLocationClick}
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center">
           <div className="flex items-center justify-center rounded-full bg-blue-500 text-white font-bold mr-3"

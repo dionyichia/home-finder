@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, XMarkIcon, DocumentMagnifyingGlassIcon, HeartIcon, GlobeAltIcon, UserCircleIcon} from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  MagnifyingGlassIcon, 
+  GlobeAltIcon, 
+  DocumentMagnifyingGlassIcon, 
+  HeartIcon, 
+  UserCircleIcon 
+} from '@heroicons/react/24/outline';
 import SummarisedLocation from './sidebar/SummarisedLocation';
 import { useMap } from '~/contexts/MapContext';
 
@@ -12,10 +19,24 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredLocations, setFilteredLocations] = useState(locations);
+  const { setSelectedLocation } = useMap();
   
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+
+  // This function will be passed to the map context for callbacks
+  const handleLocationSelected = (locationName: string) => {
+    setSearchTerm(locationName);
+    setIsOpen(true); // Ensure sidebar is open when a location is selected
+  };
+
+  // Expose the handler to the map context
+  useEffect(() => {
+    if (setSelectedLocation) {
+      setSelectedLocation(handleLocationSelected);
+    }
+  }, [setSelectedLocation]);
 
   // Update filtered locations when locations change or search term changes
   useEffect(() => {
@@ -35,6 +56,11 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
       setIsOpen(true);
     }
   }, [locations]);
+
+  // Reset search term when locations data changes
+  useEffect(() => {
+    setSearchTerm('');
+  }, [activeCategory]);
 
   return (
     <div className="fixed top-0 left-0 h-full z-50 flex">
@@ -77,22 +103,30 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
       {/* Extended White Section with Search Box and Location List */}
       {isOpen && (
         <div className="w-80 bg-white text-gray-700 flex flex-col p-4 h-full overflow-y-auto shadow-lg">
-          {/* Search Input */}
-          <div className="mb-4">
+          {/* Search Input with Clear button */}
+          <div className="mb-4 relative">
             <input
               type="text"
               placeholder="Search For Location"
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 pr-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            {searchTerm && (
+              <button 
+                className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                onClick={() => setSearchTerm('')}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            )}
           </div>
           
           {/* Locations List */}
           {locations.length > 0 && (
             <div>
               <h2 className="text-xl font-bold mb-4">
-                Locations by {activeCategory || 'Score'}
+                {searchTerm ? `Search: "${searchTerm}"` : `Locations by ${activeCategory || 'Score'}`}
               </h2>
               
               <div className="space-y-4">
@@ -101,7 +135,9 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
                     key={`${locationData[0].location_name}-${index}`}
                     locationData={locationData[0]}
                     score={locationData[1]}
-                    rank={index + 1}
+                    rank={locations.findIndex(item => 
+                      item[0].location_name === locationData[0].location_name
+                    ) + 1}
                     activeCategory={activeCategory || 'score'}
                   />
                 ))}

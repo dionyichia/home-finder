@@ -7,13 +7,16 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import CategorySelector from './CategorySelector';
 import { useLocationBubbles } from '~/hooks/useLocationBubbles';
 
+import { useRefocusMap } from '~/hooks/useRefocusMap';
+
 interface MapPolygonOverlayProps {
   activeCategory: string;
 }
 
 const MapPolygonOverlay = ({ activeCategory }: MapPolygonOverlayProps) => {
-  const { mapInstance, locations_geodata, setOverlaySourceData } = useMap();
+  const { mapInstance, locations_geodata, setOverlaySourceData, selectedLocationCallback } = useMap();
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const { initializeMapClickHandlers } = useRefocusMap(mapInstance, selectedLocationCallback);
 
 //   useEffect(() => {
 //     if (!mapInstance.current) {
@@ -142,9 +145,64 @@ const MapPolygonOverlay = ({ activeCategory }: MapPolygonOverlayProps) => {
 
         return geojsonData;
     }, [locations_geodata]);
-
-
   
+  const drawMapData = useCallback(() => {
+    if (!mapInstance.current) return;
+
+    // Remove existing layers and sources if they exist
+    if (mapInstance.current.getSource('district_coords')) {
+      ['district_coords-fills', 'district_coords-outlines'].forEach(layerId => {
+        if (mapInstance.current.getLayer(layerId)) {
+          mapInstance.current.removeLayer(layerId);
+        }
+      });
+      mapInstance.current.removeSource('district_coords');
+    }
+
+    const geojsonData = prepareGeojsonData();
+
+    if (!geojsonData) {
+      console.error('Failed to prepare geojson data');
+      return;
+    }
+
+    // Add source for polygon data
+    mapInstance.current.addSource('district_coords', {
+      type: 'geojson',
+      data: geojsonData
+    });
+    console.log("Preparing map source data:", geojsonData);
+    setOverlaySourceData(geojsonData);
+    
+    // Add polygon fill layer
+    mapInstance.current.addLayer({
+      id: 'district_coords-fills',
+      type: 'fill',
+      source: 'district_coords',
+      layout: {},
+      paint: {
+        'fill-color': '#0080ff',
+        'fill-opacity': 0.5
+      }
+    }, 'waterway-label');
+    
+    // Add polygon outline layer
+    mapInstance.current.addLayer({
+      id: 'district_coords-outlines',
+      type: 'line',
+      source: 'district_coords',
+      layout: {},
+      paint: {
+        'line-color': '#000',
+        'line-width': 2
+      }
+    }, 'waterway-label');
+
+    // Initialize map click handlers after adding the layers
+    initializeMapClickHandlers();
+  }, [mapInstance, prepareGeojsonData, setOverlaySourceData, initializeMapClickHandlers]);
+
+    
   useEffect(() => {
     console.log("trying to drawMapData")
     if (!mapInstance.current || !locations_geodata) return;
@@ -169,165 +227,8 @@ const MapPolygonOverlay = ({ activeCategory }: MapPolygonOverlayProps) => {
     //   // Clean up markers on unmount
     //   markersRef.current.forEach(marker => marker.remove());
     // };
-  }, [mapInstance.current, locations_geodata]); // This works [mapInstance.current, locations_geodata, activeCategory]);
+  }, [mapInstance.current, locations_geodata, drawMapData]); 
   
-  const drawMapData = () => {
-    // Remove existing layers and sources if they exist
-    if (mapInstance.current.getSource('district_coords')) {
-      ['district_coords-fills', 'district_coords-outlines'].forEach(layerId => {
-        if (mapInstance.current.getLayer(layerId)) {
-          mapInstance.current.removeLayer(layerId);
-        }
-      });
-      mapInstance.current.removeSource('district_coords');
-    }
-    
-    // // Clean up existing markers
-    // markersRef.current.forEach(marker => marker.remove());
-    // markersRef.current = [];
-    
-    // Create GeoJSON data from locations_geodata
-    // const filteredLocations = activeCategory 
-    //   ? locations_geodata.filter(loc => loc.properties.category === activeCategory)
-    //   : locations_geodata;
-
-    // console.log("raw locations_geodata:", JSON.stringify(locations_geodata[0], null, 2));
-      
-    // Prepare geojson data
-    const geojsonData = prepareGeojsonData();
-
-    if (!geojsonData) {
-        console.error('Failed to prepare geojson data');
-        return;
-    }
-
-    // console.log("geojsonData:", JSON.stringify(geojsonData, null, 2));
-      
-    // Add source for polygon data
-    mapInstance.current.addSource('district_coords', {
-      type: 'geojson',
-      data: geojsonData
-    });
-    console.log("Preparing map source data:", geojsonData);
-    setOverlaySourceData(geojsonData);
-    
-    // Add polygon fill layer
-    mapInstance.current.addLayer({
-      id: 'district_coords-fills',
-      type: 'fill',
-      source: 'district_coords',
-      layout: {},
-      paint: {
-        'fill-color': '#0080ff',
-        'fill-opacity': 0.5
-      }
-    }, 'waterway-label');
-    console.log("layer added")
-    
-    // Add polygon outline layer
-    mapInstance.current.addLayer({
-      id: 'district_coords-outlines',
-      type: 'line',
-      source: 'district_coords',
-      layout: {},
-      paint: {
-        'line-color': '#000',
-        'line-width': 2
-      }
-    }, 'waterway-label');
-    console.log("outline added")
-
-    // Fit the map to the polygons
-    // const bounds = new mapboxgl.LngLatBounds();
-    // geojsonData.features.forEach(feature => {
-    //     feature.geometry.coordinates[0].forEach(coord => {
-    //     bounds.extend(coord);
-    //     });
-    // });
-    // mapInstance.current.fitBounds(bounds, {
-    //     padding: 50,
-    //     maxZoom: 12
-    // });
-
-    console.log("Map sources:", mapInstance.current.getStyle().sources);
-    console.log("Map layers:", mapInstance.current.getStyle().layers);
-    
-    // Add hover effects
-    // mapInstance.current.on('mouseenter', 'district_coords-fills', () => {
-    //   mapInstance.current.getCanvas().style.cursor = 'pointer';
-    // });
-    
-    // mapInstance.current.on('mouseleave', 'district_coords-fills', () => {
-    //   mapInstance.current.getCanvas().style.cursor = '';
-    // });
-    
-    // Add info bubbles
-    // updateLocationBubbles(geojsonData.features, activeCategory);
-  };
-  
-//   const updateLocationBubbles = (locations: any[], activeCategory: string) => {
-//     locations.forEach(location => {
-//       // Calculate center of polygon
-//       const center = calculatePolygonCenter(location.geometry.coordinates);
-      
-//       // Create HTML element for the marker
-//       const el = document.createElement('div');
-//       el.className = 'location-bubble';
-
-//     // Add click listener to expand/collapse
-//     //   el.addEventListener('click', () => {
-//     //     const infoElement = el.querySelector('p');
-//     //     if (infoElement.style.display === 'none') {
-//     //       infoElement.style.display = 'block';
-//     //     } else {
-//     //       infoElement.style.display = 'none';
-//     //     }
-//     //   });
-
-//       const marker = new mapboxgl.Marker(el)
-//           .setLngLat([center.lat, center.lng])
-//           .setPopup(
-//             new mapboxgl.Popup({ offset: 25 }) // add popups
-//               .setHTML(
-//                 `<h3>${location.properties.rank}</h3><p>${location.properties.description}</p>`
-//               )
-//           )
-//           .addTo(mapInstance.current);
-        
-//       markersRef.current.push(marker);
-//     });
-//   };
-  
-// //   Helper function to calculate center of polygon
-//   const calculatePolygonCenter = (coordinates: any) => {
-//     if (!coordinates || !coordinates[0] || !coordinates[0][0]) {
-//         console.log("Coordinates provided are in an invalid format")
-//         return { lat: 0, lng: 0};
-//     }
-    
-//     // For multi-polygons, use the first polygon
-//     const points = coordinates[0];
-//     let sumX = 0;
-//     let sumY = 0;
-    
-//     points.forEach(point => {
-//       sumX += point[0];
-//       sumY += point[1];
-//     });
-    
-//     return { 'lat': sumX / points.length, 'lng': sumY / points.length };
-//   };
-  
-//   // Helper function to create display text
-//   const getDisplayInfo = (properties: any) => {
-//     const excludeKeys = ['name', 'id'];
-//     return Object.entries(properties)
-//       .filter(([key]) => !excludeKeys.includes(key))
-//       .map(([key, value]) => `${key}: ${value}`)
-//       .join('<br>');
-//   };
-  
-  // This component doesn't render anything directly
   return null;
 };
 
