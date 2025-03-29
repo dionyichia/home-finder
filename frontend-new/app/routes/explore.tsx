@@ -1,12 +1,14 @@
 // pages/Explore.tsx
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useMap } from '../contexts/MapContext';
-import Sidebar from "../components/SideBar";
+import Sidebar from "../components/sidebar/SideBar";
 import MapPolygonOverlay from '../components/map/MapPolygonOverlay';
 import CategorySelector from '../components/map/CategorySelector';
+import CollapsibleNavBar from '~/components/NavBar';
 
 import { api } from '~/api';
 import { useLocationBubbles } from '~/hooks/useLocationBubbles';
+import { useSideBar } from '~/hooks/useSideBar';
 
 export default function Explore() {
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -68,15 +70,16 @@ export default function Explore() {
             return;
         }
 
-        updateMapState(mapInstance)
+        updateMapState(mapInstance);
     }, [updateMapState])
 
     const { updateLocationBubbles } = useLocationBubbles(mapInstance);
+    const { updateSideBar, locations } = useSideBar(mapInstance);
 
     // Handler for category change
     const handleCategoryChange = (category: string) => {
         setActiveCategory(category);
-        console.log("active category swapped: ", category)
+        console.log("active category swapped: ", category);
     };
 
     // On category change, get the new sorted list of locations from API
@@ -89,7 +92,11 @@ export default function Explore() {
 
             // Update location bubbles with the new data, 
             if (sorted_locations && sorted_locations.length > 0) {
+                // Update all the Location Markers on the map
                 updateLocationBubbles(sorted_locations);
+
+                // Upadte all the locations shown in the sidebar
+                updateSideBar(sorted_locations)
             } else {
                 console.log("No location retrieved: ", sorted_locations)
             }
@@ -122,7 +129,12 @@ export default function Explore() {
                     <MapPolygonOverlay activeCategory={activeCategory || "price"}/>
                 )}
                 
-                <Sidebar />
+                {/* <Sidebar /> */}
+                {/* Integrated NavBar with SideBar functionality */}
+                <CollapsibleNavBar 
+                    locations={locations} 
+                    activeCategory={activeCategory} 
+                />
             </div>
         </div>
     );

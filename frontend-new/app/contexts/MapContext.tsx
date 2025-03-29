@@ -23,13 +23,13 @@ interface MapContextType {
   };
   locations_geodata: LocationGeoData[]; 
   isLoading: boolean;
-  activeCategory: any;
-  overlaySourceData: any;
-  setOverlaySourceData: (data: any) => void;
-  filterLocationsByCategory: (data: any) => void;
   updateMapState: (mapInstance: any) => void;
   initializeMap: (container: HTMLElement) => void;
   destroyMap: () => void; 
+  activeCategory: any;
+  filterLocationsByCategory: (data: any) => void;
+  overlaySourceData: any;
+  setOverlaySourceData: (data: any) => void;
 }
   
 const MapContext = createContext<MapContextType | null>(null);
@@ -198,7 +198,6 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
 
   const filterLocationsByCategory = (category: any) => {
     setActiveCategory(category);
-    // You might want to update the map display here or let components handle it
   };
 
   // this is for the reloading the markers on each polygon and location
@@ -211,13 +210,13 @@ export const MapProvider = ({ children } : { children: ReactNode }) => {
         mapState, 
         locations_geodata,
         isLoading,
-        activeCategory,
-        overlaySourceData,
-        setOverlaySourceData,
-        filterLocationsByCategory,
         updateMapState,
         initializeMap,
         destroyMap, 
+        activeCategory,
+        filterLocationsByCategory,
+        overlaySourceData,
+        setOverlaySourceData,
       }}
     >
       {children}

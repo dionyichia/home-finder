@@ -1,12 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon, DocumentMagnifyingGlassIcon, HeartIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import SummarisedLocation from './sidebar/SummarisedLocation';
+import { useMap } from '~/contexts/MapContext';
 
-export default function CollapsibleNavBar() {
-  const [isOpen, setIsOpen] = useState(true);
+interface CollapsibleNavBarProps {
+  locations: any[];
+  activeCategory: string;
+}
+
+export default function CollapsibleNavBar({ locations, activeCategory }: CollapsibleNavBarProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredLocations, setFilteredLocations] = useState(locations);
   
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+
+  // Update filtered locations when locations change or search term changes
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredLocations(locations);
+    } else {
+      const filtered = locations.filter(location => 
+        location[0].location_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredLocations(filtered);
+    }
+  }, [locations, searchTerm]);
+
+  // Automatically open sidebar when locations are provided
+  useEffect(() => {
+    if (locations && locations.length > 0) {
+      setIsOpen(true);
+    }
+  }, [locations]);
 
   return (
     <div className="fixed top-0 left-0 h-full z-50 flex">
@@ -42,14 +70,52 @@ export default function CollapsibleNavBar() {
         </div>
       </div>
 
-      {/* Extended White Section with Search Box */}
+      {/* Extended White Section with Search Box and Location List */}
       {isOpen && (
-        <div className="w-64 bg-white text-gray-700 flex flex-col p-4">
-          <input
-            type="text"
-            placeholder="Search For Location"
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
-          />
+        <div className="w-80 bg-white text-gray-700 flex flex-col p-4 h-full overflow-y-auto shadow-lg">
+          {/* Search Input */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search For Location"
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          {/* Locations List */}
+          {locations.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold mb-4">
+                Locations by {activeCategory || 'Score'}
+              </h2>
+              
+              <div className="space-y-4">
+                {filteredLocations.map((locationData, index) => (
+                  <SummarisedLocation 
+                    key={`${locationData[0].location_name}-${index}`}
+                    locationData={locationData[0]}
+                    score={locationData[1]}
+                    rank={index + 1}
+                    activeCategory={activeCategory || 'score'}
+                  />
+                ))}
+              </div>
+              
+              {filteredLocations.length === 0 && searchTerm && (
+                <p className="text-gray-500 text-center py-4">
+                  No locations found matching "{searchTerm}"
+                </p>
+              )}
+            </div>
+          )}
+          
+          {locations.length === 0 && (
+            <p className="text-gray-500 text-center py-4">
+              Select a category to view locations
+            </p>
+          )}
         </div>
       )}
     </div>
