@@ -57,6 +57,15 @@ interface LocationDataResponse {
   score: number;
 }
 
+const FLAT_COLORS: Record<string, string> = {
+  "2 ROOM": "#a855f7",
+  "3 ROOM": "#ef4444",
+  "4 ROOM": "#3b82f6",
+  "5 ROOM": "#eab308",
+  "EXECUTIVE": "#10b981",
+  "MULTI-GENERATION": "#8b5cf6",
+};
+
 const ViewLocation = ({ locationName: propName }: { locationName?: string }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [locationData, setLocationData] = useState<LocationDataResponse | null>(null);
@@ -64,105 +73,11 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
   const { locationName: paramName } = useParams();
   const locationName = propName || paramName;
 
-  const processLocationData = (data: LocationDataResponse) => {
-    const priceData = processPriceData(data.price);
-    const latestPrices = data.price
-      .filter(p => p.month === data.price[0].month)
-      .map(p => p.resale_price);
-    const avgPrice = latestPrices.length > 0 
-      ? Math.round(latestPrices.reduce((sum, price) => sum + price, 0) / latestPrices.length)
-      : 0;
-    const schoolsFormatted = data.schools.map(school => ({
-      name: school["School Name"],
-      distance: calculateDistance(school.Latitude, school.Longitude) + " km",
-      time: Math.round(calculateDistance(school.Latitude, school.Longitude) * 10) + " min walk"
-    })).slice(0, 3);
-    const mallsFormatted = data.malls.map(mall => ({
-      name: mall.mall_name,
-      distance: calculateDistance(mall.latitude, mall.longitude) + " km"
-    })).slice(0, 3);
-    const transportFormatted = data.transport.map(station => ({
-      name: station.station_name,
-      distance: calculateDistance(station.latitude, station.longitude) + " km"
-    })).slice(0, 3);
-    const normalizedCrimeRate = normalizeCrimeRate(data.crime_rate);
-
-    return {
-      name: locationName,
-      price: formatCurrency(avgPrice),
-      crimeRate: normalizedCrimeRate,
-      rawCrimeRate: data.crime_rate,
-      resaleTrends: priceData,
-      nearestSchools: schoolsFormatted,
-      nearestMalls: mallsFormatted,
-      nearestTransport: transportFormatted,
-      score: data.score,
-    };
-  };
-
-  const processPriceData = (priceData: PriceData[]) => {
-    const flatTypeColors: Record<string, string> = {
-      "1 ROOM": "#9ca3af",
-      "2 ROOM": "#8b5cf6",
-      "3 ROOM": "#f87171",
-      "4 ROOM": "#3b82f6",
-      "5 ROOM": "#facc15",
-      "EXECUTIVE": "#10b981",
-      "MULTI-GENERATION": "#a855f7",
-    };
-
-    const sorted = [...priceData].sort(
-      (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
-    );
-
-    const labels = Array.from(
-      new Set(sorted.map((entry) => entry.month))
-    ).slice(-12).map((month) => {
-      const [year, m] = month.split("-");
-      return `${m}/${year.slice(2)}`;
-    });
-
-    const grouped: Record<string, (number | null)[]> = {};
-    const months = Array.from(
-      new Set(sorted.map((entry) => entry.month))
-    ).slice(-12);
-
-    const flatTypes = Array.from(new Set(sorted.map((p) => p.flat_type)));
-    flatTypes.forEach((type) => {
-      grouped[type] = months.map((month) => {
-        const prices = sorted.filter(
-          (p) => p.flat_type === type && p.month === month
-        ).map((p) => p.resale_price);
-        return prices.length ? Math.round(prices.reduce((a, b) => a + b) / prices.length) : null;
-      });
-    });
-
-    const datasets = Object.entries(grouped)
-      .filter(([_, data]) => data.filter(v => v !== null).length >= 2) // only show if at least 2 points
-      .map(([type, data]) => ({
-        label: type,
-        data: data.map((val) => (val !== null ? val : null)),
-        borderColor: flatTypeColors[type] || "gray",
-        backgroundColor: flatTypeColors[type] || "gray",
-        borderWidth: 2,
-        tension: 0.2,
-        pointRadius: 4,
-        spanGaps: true,
-      }));
-
-    return {
-      labels,
-      datasets,
-    };
-  };
-
   const calculateDistance = (lat: string | number, lng: string | number) => {
     return (Math.random() * 2.9 + 0.1).toFixed(1);
   };
 
-  const formatCurrency = (value: number) => {
-    return `S$${value.toLocaleString()}`;
-  };
+  const formatCurrency = (value: number) => `S$${value.toLocaleString()}`;
 
   const normalizeCrimeRate = (crimeRate: number) => {
     if (crimeRate <= 200) return 5;
@@ -170,6 +85,112 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
     if (crimeRate <= 600) return 3;
     if (crimeRate <= 800) return 2;
     return 1;
+  };
+
+  const getCrimeLevelColor = (rate: number) => {
+    if (rate <= 200) return "bg-green-500";
+    if (rate <= 400) return "bg-yellow-400";
+    if (rate <= 600) return "bg-orange-400";
+    return "bg-red-600";
+  };
+
+  const processPriceData = (priceData: PriceData[]) => {
+    const sortedData = [...priceData].sort(
+      (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
+    );
+
+    const grouped: Record<string, Record<string, number[]>> = {};
+    const labelsSet = new Set<string>();
+
+    sortedData.forEach(({ month, resale_price, flat_type }) => {
+      labelsSet.add(month);
+      if (!grouped[flat_type]) grouped[flat_type] = {};
+      if (!grouped[flat_type][month]) grouped[flat_type][month] = [];
+      grouped[flat_type][month].push(resale_price);
+    });
+
+    const labels = Array.from(labelsSet)
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+      .slice(-12)
+      .map(date => {
+        const [year, month] = date.split("-");
+        return `${month}/${year.slice(2)}`;
+      });
+
+    const datasets = Object.entries(grouped).map(([flatType, monthlyMap]) => {
+      const color = FLAT_COLORS[flatType] || "#999999";
+      const rawMonths = Object.keys(monthlyMap).sort();
+      const slicedMonths = rawMonths.slice(-12);
+
+      const data = slicedMonths.map(month => {
+        const values = monthlyMap[month];
+        const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+        return Math.round(avg);
+      });
+
+      return {
+        label: flatType,
+        data,
+        borderColor: color,
+        backgroundColor: color,
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false,
+      };
+    });
+
+    return { labels, datasets };
+  };
+
+  const processLocationData = (data: LocationDataResponse) => {
+    const resaleTrends = processPriceData(data.price);
+    const latestPrices = data.price
+      .filter(p => p.month === data.price[0].month)
+      .map(p => p.resale_price);
+    const avgPrice =
+      latestPrices.length > 0
+        ? Math.round(
+            latestPrices.reduce((sum, price) => sum + price, 0) /
+              latestPrices.length
+          )
+        : 0;
+
+    const schoolsFormatted = data.schools
+      .map(s => ({
+        name: s["School Name"],
+        distance: calculateDistance(s.Latitude, s.Longitude) + " km",
+        time:
+          Math.round(
+            parseFloat(calculateDistance(s.Latitude, s.Longitude)) * 10
+          ) + " min walk",
+      }))
+      .slice(0, 3);
+
+    const mallsFormatted = data.malls
+      .map(m => ({
+        name: m.mall_name,
+        distance: calculateDistance(m.latitude, m.longitude) + " km",
+      }))
+      .slice(0, 3);
+
+    const transportFormatted = data.transport
+      .map(t => ({
+        name: t.station_name,
+        distance: calculateDistance(t.latitude, t.longitude) + " km",
+      }))
+      .slice(0, 3);
+
+    return {
+      name: locationName,
+      price: formatCurrency(avgPrice),
+      crimeRate: normalizeCrimeRate(data.crime_rate),
+      rawCrimeRate: data.crime_rate,
+      resaleTrends,
+      nearestSchools: schoolsFormatted,
+      nearestMalls: mallsFormatted,
+      nearestTransport: transportFormatted,
+      score: data.score,
+    };
   };
 
   useEffect(() => {
@@ -188,13 +209,6 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
   }, [locationName]);
 
   if (!processedData) return <p>Loading...</p>;
-
-  const getCrimeLevelColor = (rate: number) => {
-    if (rate <= 200) return "bg-green-500";
-    if (rate <= 400) return "bg-yellow-400";
-    if (rate <= 600) return "bg-orange-400";
-    return "bg-red-600";
-  };
 
   return (
     <div className="w-full max-w-[700px] p-6 pb-20 bg-white/60 backdrop-blur-md rounded-2xl shadow-md mx-auto text-black border border-gray-200">
@@ -241,7 +255,9 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
             </div>
           </div>
           <a
-            href={`https://www.google.com/maps/search/${encodeURIComponent(processedData.name)}`}
+            href={`https://www.google.com/maps/search/${encodeURIComponent(
+              processedData.name
+            )}`}
             target="_blank"
             className="text-purple-700 underline text-sm mt-1"
           >
@@ -252,14 +268,27 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
       {/* Chart */}
       <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">Resale Price Trends</h3>
+        <h3 className="text-lg font-bold">Resale Price Trends</h3>
         <div className="h-[300px]">
           <Line
-            data={processedData.resaleTrends}
+            data={{
+              labels: processedData.resaleTrends.labels,
+              datasets: processedData.resaleTrends.datasets,
+            }}
             options={{
               responsive: true,
               maintainAspectRatio: false,
               animation: false,
+              plugins: {
+                legend: {
+                  position: "top" as const,
+                  labels: {
+                    usePointStyle: true,
+                    pointStyle: "circle",
+                    boxWidth: 10,
+                  },
+                },
+              },
               scales: {
                 y: {
                   ticks: {
@@ -272,24 +301,28 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
         </div>
       </div>
 
-      {/* Crime Bar */}
-      <div className="mt-6">
-        <h3 className="text-lg font-bold flex items-center gap-2 text-red-600">
-          <ShieldExclamationIcon className="w-5 h-5" />
-          Crime Data
-        </h3>
-        <div className="flex items-center mt-2 gap-2">
-          {["bg-green-500", "bg-yellow-400", "bg-orange-400", "bg-red-600"].map((color, idx) => (
-            <div
-              key={idx}
-              className={`w-6 h-3 rounded-full ${color} ${
-                getCrimeLevelColor(processedData.rawCrimeRate) === color ? "ring-2 ring-black" : ""
-              }`}
-            />
-          ))}
-          <span className="text-sm text-gray-700">Low to High</span>
+      {/* Crime Bar (show if crime_rate OR crime data) */}
+      {(typeof processedData.rawCrimeRate === "number" || locationData?.crime?.length > 0) && (
+        <div className="mt-6">
+          <h3 className="text-lg font-bold flex items-center gap-2 text-red-600">
+            <ShieldExclamationIcon className="w-5 h-5" />
+            Crime Data
+          </h3>
+          <div className="flex items-center mt-2 gap-2">
+            {["bg-green-500", "bg-yellow-400", "bg-orange-400", "bg-red-600"].map((color, idx) => (
+              <div
+                key={idx}
+                className={`w-6 h-3 rounded-full ${color} ${
+                  getCrimeLevelColor(processedData.rawCrimeRate) === color
+                    ? "ring-2 ring-black"
+                    : ""
+                }`}
+              />
+            ))}
+            <span className="text-sm text-gray-700">Low to High</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Transport */}
       <div className="mt-6">
@@ -298,7 +331,10 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           Nearest Transport
         </h3>
         {processedData.nearestTransport.map((station: any, index: number) => (
-          <div key={index} className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between">
+          <div
+            key={index}
+            className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"
+          >
             <h4 className="font-bold">{station.name}</h4>
             <p className="text-gray-600 flex items-center">
               <MapPinIcon className="w-4 h-4 mr-1" /> {station.distance}
@@ -314,7 +350,10 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           Nearest Schools
         </h3>
         {processedData.nearestSchools.map((school: any, index: number) => (
-          <div key={index} className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between">
+          <div
+            key={index}
+            className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"
+          >
             <div>
               <h4 className="font-bold">{school.name}</h4>
               <p className="text-gray-600 flex items-center">
@@ -335,7 +374,10 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           Nearest Malls
         </h3>
         {processedData.nearestMalls.map((mall: any, index: number) => (
-          <div key={index} className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between">
+          <div
+            key={index}
+            className="bg-gray-100 p-4 rounded-lg mt-2 flex justify-between"
+          >
             <h4 className="font-bold">{mall.name}</h4>
             <p className="text-gray-600 flex items-center">
               <MapPinIcon className="w-4 h-4 mr-1" /> {mall.distance}
