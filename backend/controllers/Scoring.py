@@ -122,7 +122,7 @@ class ScoringController:
                 - other category preferences
         
         Returns:
-            List of top 5 locations with their scores, sorted by final score
+            List of tuples containing top 5 locations with their scores, sorted by final score (location, normalized_score)
         """
         # Calculate weights based on importance ranking
         weights = {}
@@ -198,13 +198,13 @@ class ScoringController:
             
             # Normalize final score
             final_score = weighted_score / total_weight if total_weight > 0 else 0
+            final_score = round(final_score, 2)
             
-            # Create result object with all relevant data
-            result = location.copy()  # Copy all original location data
-            result['score'] = round(final_score, 2)
-            result['category_scores'] = {k: round(v, 2) for k, v in category_scores.items()}
+            # Store the score in the location
+            location_copy = location.copy()
+            location_copy['category_scores'] = {k: round(v, 2) for k, v in category_scores.items()}
             
-            scored_locations.append(result)
+            scored_locations.append((location_copy, final_score))
         
         # Sort by score (highest first) and return top 5
-        return sorted(scored_locations, key=lambda x: x['score'], reverse=True)[:5]
+        return sorted(scored_locations, key=lambda x: x[1], reverse=True)[:5]

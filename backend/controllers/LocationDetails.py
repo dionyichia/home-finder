@@ -81,7 +81,7 @@ class LocationsDetailController:
             'schools': schools,
             'malls': malls,
             'transport': transport,
-            # 'score': 1, # There is a problem with scoring.
+            # 'score': 1, 
         }
     
     @staticmethod

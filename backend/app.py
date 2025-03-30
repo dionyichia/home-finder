@@ -88,9 +88,9 @@ def register():
 
     if username and user_email and password:
         if not User.UserController.check_user_existence(username=username, email=user_email):
-            User.UserController.create_new_user(username=username, email=user_email, password=password, preferences=preferences)
+            user_id = User.UserController.create_new_user(username=username, email=user_email, password=password, preferences=preferences)
         
-            return jsonify({"message": "User registered successfully!"}), 201
+            return jsonify({"message": "User registered successfully!", "user_id": user_id}), 201
         else:
             return jsonify({"message": "User already exists!"}), 409
     else:
