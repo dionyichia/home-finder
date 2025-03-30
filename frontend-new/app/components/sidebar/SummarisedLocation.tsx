@@ -26,7 +26,7 @@ export default function SummarisedLocation({
 }: SummarisedLocationProps) {
   const navigate = useNavigate();
   const { mapInstance, selectedLocationCallback } = useMap();
-  const { refocusByLocationName } = useRefocusMap(mapInstance, selectedLocationCallback);
+  const { refocusByLocationName } = useRefocusMap(selectedLocationCallback);
   
   // Format the score to 2 decimal places
   const formattedScore = score.toFixed(2);

@@ -30,7 +30,7 @@ def fetch_malls(mall_name: str) -> dict:
         with open(CACHE_LOCATION_COORDINATES_FILE, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row['mall_name'].lower() == mall_name.lower():
+                if row['name'].lower() == mall_name.lower():
                     return {
                         mall_name: {
                             'latitude': float(row['latitude']),
@@ -56,7 +56,7 @@ def fetch_all_malls() -> list:
             reader = csv.DictReader(f)
             for row in reader:
                 malls.append({
-                    'mall_name': row['mall_name'],
+                    'name': row['name'],
                     'latitude': float(row['latitude']),
                     'longitude': float(row['longitude']),
                     'planning_area': row['planning area']

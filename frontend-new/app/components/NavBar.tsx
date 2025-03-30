@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  XMarkIcon, 
-  MagnifyingGlassIcon, 
-  GlobeAltIcon, 
-  DocumentMagnifyingGlassIcon, 
-  HeartIcon, 
-  UserCircleIcon 
-} from '@heroicons/react/24/outline';
-import SummarisedLocation from './sidebar/SummarisedLocation';
 import { useMap } from '~/contexts/MapContext';
+import { XMarkIcon, MagnifyingGlassIcon, GlobeAltIcon, DocumentMagnifyingGlassIcon, HeartIcon, UserCircleIcon, AcademicCapIcon, ShoppingBagIcon, TruckIcon } from '@heroicons/react/24/outline';
+import SummarisedLocation from './sidebar/SummarisedLocation';
+
+import { useRefocusMap } from '~/hooks/useRefocusMap';
 
 interface CollapsibleNavBarProps {
   locations: any[];
-  activeCategory: string;
+  activeCategory: string | null;
 }
 
 export default function CollapsibleNavBar({ locations, activeCategory }: CollapsibleNavBarProps) {
@@ -21,14 +16,27 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
   const [filteredLocations, setFilteredLocations] = useState(locations);
   const { setSelectedLocation } = useMap();
   
+  // Import the enhanced refocusMap hook
+  const { refocusMap, refocusByLocationName, initializeMapClickHandlers, resetMapView, currentLocationName } = useRefocusMap(handleLocationSelected);
+  
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
   // This function will be passed to the map context for callbacks
-  const handleLocationSelected = (locationName: string) => {
+  function handleLocationSelected(locationName: string) {
     setSearchTerm(locationName);
     setIsOpen(true); // Ensure sidebar is open when a location is selected
+  }
+
+  // Handle clearing search term and resetting map
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    
+    // Reset map view when search is cleared
+    if (currentLocationName) {
+      resetMapView();
+    }
   };
 
   // Expose the handler to the map context
@@ -57,10 +65,20 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
     }
   }, [locations]);
 
-  // Reset search term when locations data changes
+  // Reset search term and map view when category changes
   useEffect(() => {
     setSearchTerm('');
-  }, [activeCategory]);
+    if (currentLocationName) {
+      resetMapView();
+    }
+  }, [activeCategory, currentLocationName, resetMapView]);
+
+  // Sync currentLocationName with searchTerm
+  useEffect(() => {
+    if (currentLocationName && searchTerm !== currentLocationName) {
+      setSearchTerm(currentLocationName);
+    }
+  }, [currentLocationName]);
 
   return (
     <div className="fixed top-0 left-0 h-full z-50 flex">
@@ -115,15 +133,44 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
             {searchTerm && (
               <button 
                 className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                onClick={() => setSearchTerm('')}
+                onClick={handleClearSearch}
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             )}
           </div>
           
-          {/* Locations List */}
-          {locations.length > 0 && (
+          {/* Location Details View when a specific location is selected */}
+          {currentLocationName && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">{currentLocationName}</h2>
+                <button 
+                  className="text-blue-600 hover:underline text-sm"
+                  onClick={handleClearSearch}
+                >
+                  Back to list
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="bg-blue-100 p-3 rounded-lg text-center">
+                  <AcademicCapIcon className="h-6 w-6 mx-auto text-blue-600" />
+                  <div className="text-sm mt-1 font-medium">Schools</div>
+                </div>
+                <div className="bg-red-100 p-3 rounded-lg text-center">
+                  <ShoppingBagIcon className="h-6 w-6 mx-auto text-red-600" />
+                  <div className="text-sm mt-1 font-medium">Malls</div>
+                </div>
+                <div className="bg-green-100 p-3 rounded-lg text-center">
+                  <TruckIcon className="h-6 w-6 mx-auto text-green-600" />
+                  <div className="text-sm mt-1 font-medium">Transport</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Locations List (shown only when no specific location is selected) */}
+          {!currentLocationName && locations.length > 0 && (
             <div>
               <h2 className="text-xl font-bold mb-4">
                 {searchTerm ? `Search: "${searchTerm}"` : `Locations by ${activeCategory || 'Score'}`}

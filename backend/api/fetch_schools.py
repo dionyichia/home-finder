@@ -56,7 +56,7 @@ def save_to_csv():
 
     with open(CACHE_LOCATION_COORDINATES_FILE, mode="w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["School Name", "Latitude", "Longitude", "Planning Area"])  # CSV headers
+        writer.writerow(["name", "latitude", "longitude", "Planning Area"])  # CSV headers
 
         for school in schools:
             name = school.get("NAME", "Unknown")
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     yishun_schools = get_all_schools_by_district("Bedok")
     print(f"Schools in Bedok ({len(yishun_schools)}):")
     for school in yishun_schools:
-        print(f"- {school['School Name']}")
+        print(f"- {school['name']}")
     
     # # Example: Get number of schools by district
     # serangoon_count = get_num_schools_by_district("Serangoon")

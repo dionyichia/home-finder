@@ -13,7 +13,7 @@ import { useRefocusMap } from '~/hooks/useRefocusMap';
 
 export default function Explore() {
     const mapContainer = useRef<HTMLDivElement>(null);
-    const { mapInstance, mapState, locations_geodata, isLoading, overlaySourceData, initializeMap, updateMapState, destroyMap, selectedLocationCallback} = useMap();
+    const { mapInstance, mapState, locations_geodata, isLoading, overlaySourceData, initializeMap, updateMapState, destroyMap, selectedLocationCallback, setSelectedLocation} = useMap();
     const [activeCategory, setActiveCategory] = useState<string>('price');
     const [isMapLoaded, setIsMapLoaded] = useState(false);
     const [domReady, setDomReady] = useState(false);
@@ -81,6 +81,11 @@ export default function Explore() {
     const handleCategoryChange = (category: string) => {
         setActiveCategory(category);
         console.log("active category swapped: ", category);
+
+        // Reset detailed view if active
+        if (currentLocationName) {
+            resetMapView();
+        }
     };
 
     // On category change, get the new sorted list of locations from API
@@ -107,10 +112,26 @@ export default function Explore() {
         fetchSortedLocations();
     }, [activeCategory, overlaySourceData]);
 
-    const { refocusMap, refocusByLocationName, initializeMapClickHandlers } = useRefocusMap(
-        mapInstance,
-        selectedLocationCallback
-      );
+    const { 
+        refocusMap, 
+        refocusByLocationName, 
+        initializeMapClickHandlers,
+        resetMapView,
+        currentLocationName
+    } = useRefocusMap(mapInstance, selectedLocationCallback);
+
+    // Expose the refocus map functionality to the sidebar
+    useEffect(() => {
+        if (setSelectedLocation) {
+            setSelectedLocation((locationName: string) => {
+                // Try to refocus the map to the selected location
+                const success = refocusByLocationName(locationName, { zoom: 14 });
+                if (!success) {
+                    console.warn(`Failed to refocus to location: ${locationName}`);
+                }
+            });
+        }
+    }, [setSelectedLocation, refocusByLocationName]);
 
     // Loading state
     if (isLoading) {

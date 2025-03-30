@@ -17,57 +17,54 @@ interface MapPolygonOverlayProps {
 const MapPolygonOverlay = ({ activeCategory }: MapPolygonOverlayProps) => {
   const { mapInstance, locations_geodata, setOverlaySourceData, selectedLocationCallback } = useMap();
   const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const { initializeMapClickHandlers } = useRefocusMap(mapInstance, selectedLocationCallback);
+  const { initializeMapClickHandlers } = useRefocusMap(selectedLocationCallback);
 
     const calculatePolygonCenter = (coordinates: number[][]) => {
-      
         const labelPosition = polylabel([coordinates], 0.0001);
-        console.log('labelPos; ', labelPosition)
         return {
             lat: labelPosition[1],
             lng: labelPosition[0],
         }
-
     };
 
-  // Memoized data preparation to ensure consistent data structure
-  const prepareGeojsonData = useCallback(() => {
-      if (!locations_geodata || locations_geodata.length === 0) {
-      console.warn('No geodata available');
-      return null;
-      }
+    // Memoized data preparation to ensure consistent data structure
+    const prepareGeojsonData = useCallback(() => {
+        if (!locations_geodata || locations_geodata.length === 0) {
+        console.warn('No geodata available');
+        return null;
+        }
 
-      const geojsonData = {
-      type: 'FeatureCollection',
-      features: locations_geodata.map(location => {
-          // Defensive checks
-          if (!location || !location.geodata) {
-          console.warn('Invalid location data:', location);
-          return null;
-          }
+        const geojsonData = {
+        type: 'FeatureCollection',
+        features: locations_geodata.map(location => {
+            // Defensive checks
+            if (!location || !location.geodata) {
+            console.warn('Invalid location data:', location);
+            return null;
+            }
 
-          try {
-          return {
-              type: 'Feature',
-              properties: {
-              name: location.location_name,
-              center: calculatePolygonCenter(location.geodata),
-              // Add any additional properties you need
-              },
-              geometry: {
-              type: 'Polygon',
-              coordinates: [location.geodata]
-              }
-          };
-          } catch (error) {
-          console.error('Error processing location:', location, error);
-          return null;
-          }
-      }).filter(Boolean) // Remove any null entries
-      };
+            try {
+            return {
+                type: 'Feature',
+                properties: {
+                name: location.location_name,
+                center: calculatePolygonCenter(location.geodata),
+                // Add any additional properties you need
+                },
+                geometry: {
+                type: 'Polygon',
+                coordinates: [location.geodata]
+                }
+            };
+            } catch (error) {
+            console.error('Error processing location:', location, error);
+            return null;
+            }
+        }).filter(Boolean) // Remove any null entries
+        };
 
-      return geojsonData;
-  }, [locations_geodata]);
+        return geojsonData;
+    }, [locations_geodata]);
   
   const drawMapData = useCallback(() => {
     if (!mapInstance.current) return;
@@ -150,7 +147,7 @@ const MapPolygonOverlay = ({ activeCategory }: MapPolygonOverlayProps) => {
     //   // Clean up markers on unmount
     //   markersRef.current.forEach(marker => marker.remove());
     // };
-  }, [mapInstance.current, locations_geodata, drawMapData]); 
+  }, [mapInstance.current, locations_geodata]); 
   
   return null;
 };

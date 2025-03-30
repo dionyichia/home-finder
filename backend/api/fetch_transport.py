@@ -59,7 +59,7 @@ def fetch_all_mrt_stations() -> list:
             reader = csv.DictReader(f)
             for row in reader:
                 stations.append({
-                    'station_name': row['Name'],
+                    'name': row['Name'],
                     'latitude': float(row['Latitude']),
                     'longitude': float(row['Longitude']),
                     'planning_area': row['Planning Area']
@@ -160,7 +160,7 @@ def test_stations_by_location():
     stations = get_all_stations_by_location(location)
     print(f"Found {len(stations)} stations in {location}:")
     for station in stations:
-        print(f"- {station['station_name']}")
+        print(f"- {station['name']}")
 
 def test_count_by_district():
     """Test counting stations in various districts."""
