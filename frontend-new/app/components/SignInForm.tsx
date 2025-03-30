@@ -7,7 +7,7 @@ interface SignInFormProps {
 
 export default function SignInForm({ onToggleForm }: SignInFormProps) {
   const [formData, setFormData] = useState({
-    user_email: "",
+    username_or_email: "",
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
 
   // Validate that both fields are filled in.
   const isFormValid =
-    formData.user_email.trim() !== "" && formData.password.trim() !== "";
+    formData.username_or_email.trim() !== "" && formData.password.trim() !== "";
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
@@ -53,7 +53,7 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
             id="user_email"
             name="user_email"
             type="email"
-            value={formData.user_email}
+            value={formData.username_or_email}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             placeholder="Insert here"
