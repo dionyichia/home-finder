@@ -33,7 +33,7 @@ class ScoringController:
                     return Exception
 
                 # Get UserID
-                preferences = Preferences.get_user_preferences(user_id)
+                preferences = Preferences.PreferenceController.get_user_preferences(user_id)
 
                 return ScoringController.calculate_score_for_preferences(locations=locations, preferences=preferences)
 

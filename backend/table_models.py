@@ -41,7 +41,6 @@ def create_database():
     ''')
 
     # Locations table
-    # location_geodata contains jsonified location geodata, i.e. a list of coordinates
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS locations (
         location_name TEXT PRIMARY KEY,

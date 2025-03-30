@@ -28,14 +28,21 @@ def get_all_locations():
     """
     # Get data sent in request
     sorting_category = request.args.get('sort_by', default=None)
+    user_id = None
 
     if not sorting_category:
         return jsonify({"message": "Missing sorting category!"}), 400
 
     if sorting_category not in ["price", "crime_rate", "num_schools", "num_malls", "num_transport", "score"]:
         return jsonify({"message": "Unknown sorting category!"}), 400
+    
+    if sorting_category == 'score':
+        user_id = request.args.get('user_id', default=None)
 
-    ranked_locations = Locations.LocationsController.sort_by_category(sorting_category=sorting_category)
+        if not user_id:
+            return jsonify({"message": "Missing required user_id"}), 400
+
+    ranked_locations = Locations.LocationsController.sort_by_category(sorting_category=sorting_category, user_id=user_id)
 
     # Return list of ranked locations
     return jsonify(ranked_locations)
@@ -110,7 +117,7 @@ def verify_user():
 
 # Check if user already exists
 @app.route('/check_user_exist', methods=['POST'])  # Changed to POST for sending credentials
-def verify_user():
+def check_user_exist():
     """
     Return: 200 if user does not exist
     """

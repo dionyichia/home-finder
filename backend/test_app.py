@@ -12,21 +12,81 @@ def client():
     with app.test_client() as client:
         yield client
 
-def test_sort_endpoint(client):
+@pytest.fixture
+def create_test_user(client):
+    """Create a test user for sorting by score tests"""
+    test_user = {
+        "username": "sortuser",
+        "user_email": "sort@example.com",
+        "password": "password123",
+        "price": 500000,
+        "crime_rate": 2,
+        "schools": 3,
+        "malls": 2,
+        "transport": 4,
+        "importance_rank": ["price", "crime_rate", "schools", "malls", "transport"]
+    }
+    
+    # Register the test user
+    response = client.post('/register', 
+                         data=json.dumps(test_user),
+                         content_type='application/json')
+    
+    # Get the user_id from the response
+    if response.status_code == 201:
+        user_data = json.loads(response.data)
+        return user_data.get('user_id')
+    
+    # If user already exists, try to get their ID
+    elif response.status_code == 409:
+        # You might need to implement a login endpoint or a way to fetch existing user ID
+        # For this example, we'll just return a hardcoded ID that we expect to exist
+        return 1
+    
+    return None
+
+def test_sort_endpoint(client, create_test_user):
     """Test the sorting endpoint"""
-    # Test with a valid sorting category
-    print("Test with a valid sorting category =======")
-    for cat in ["price", "crime_rate", "num_schools", "num_malls", "num_transport", "score"]:
-        print("Sorting for category", cat)
-        response = client.get('/sort?sort_by=price')
+    user_id = create_test_user
+    assert user_id is not None, "Failed to create or retrieve test user"
+    
+    print("Test with valid sorting categories =======")
+    
+    # Test each category individually with the correct URL for each
+    for cat in ["price", "crime_rate", "num_schools", "num_malls", "num_transport"]:
+        print(f"Sorting for category {cat}")
+        response = client.get(f'/sort?sort_by={cat}')
         assert response.status_code == 200
         data = json.loads(response.data)
-        print(data[:3])
+        print(data[:3] if len(data) >= 3 else data)
         print("\n")
         assert isinstance(data, list)
+        # Verify the data is sorted correctly (higher values first for these categories)
+        if len(data) >= 2:
+            assert data[0][1] >= data[1][1], f"Results for {cat} are not properly sorted"
+    
+    # Test specifically for the 'score' category with user_id
+    print("Sorting for category score")
+    response = client.get(f'/sort?sort_by=score&user_id={user_id}')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    print(data[:3] if len(data) >= 3 else data)
+    print("\n")
+    assert isinstance(data, list)
+    # Verify the data is sorted by score (higher values first)
+    if len(data) >= 2:
+        assert data[0][1] >= data[1][1], "Results for score are not properly sorted"
+    
+    # Test score sorting without user_id (should fail)
+    response = client.get('/sort?sort_by=score')
+    assert response.status_code == 400
     
     # Test with missing sorting category
     response = client.get('/sort')
+    assert response.status_code == 400
+    
+    # Test with invalid sorting category
+    response = client.get('/sort?sort_by=invalid_category')
     assert response.status_code == 400
 
 def test_search_endpoint(client):

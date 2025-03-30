@@ -105,7 +105,8 @@ class LocationsController:
         except Exception as e:
             print(f"Error occurred: {e}")
             return None
-        
+    
+    @staticmethod
     def get_all_locations_geojson():
         """
         Return: List of dicts, each location 1 dict
@@ -120,11 +121,7 @@ class LocationsController:
 
         locations = LocationsController.get_locations()
 
-        if sorting_category == 'score':
-            return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category='score', user_id=user_id)
-            
-        else:
-            return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category=sorting_category)
+        return Scoring.ScoringController.assign_score_n_rank_all_locations(locations=locations, category=sorting_category, user_id=user_id)
             
 
     def summarised_details(location: str, sorting_category='price'):
