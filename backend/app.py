@@ -80,7 +80,7 @@ def register():
             return jsonify({"message": "Missing required preference field(s)!"}), 400
 
     if username and user_email and password:
-        if User.UserController.check_if_user_does_not_exist(username=username, email=user_email):
+        if not User.UserController.check_user_existence(username=username, email=user_email):
             User.UserController.create_new_user(username=username, email=user_email, password=password, preferences=preferences)
         
             return jsonify({"message": "User registered successfully!"}), 201
@@ -107,6 +107,23 @@ def verify_user():
         return jsonify({"message": "Verified User!", "user_id": user_id}), 200
     else:
         return jsonify({"message": "Unverified User!"}), 401
+
+# Check if user already exists
+@app.route('/check_user_exist', methods=['POST'])  # Changed to POST for sending credentials
+def verify_user():
+    """
+    Return: 200 if user does not exist
+    """
+    data = request.get_json()
+    username = data['username']
+    user_email = data['user_email']
+
+    result = User.UserController.check_user_existence(username=username, email=user_email)
+    
+    if not result:
+        return jsonify({"message": "New user does not exist"}), 201
+    else:
+        return jsonify({"message": result}), 409
 
 # Fix the update_user_details route
 @app.route('/update_user_info', methods=['POST'])

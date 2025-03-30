@@ -77,26 +77,35 @@ class UserController:
         except Exception as e:
             print(f"Error occurred: {e}")
             return False
-
     @staticmethod
-    def check_if_user_does_not_exist(username: str, email: str):
+    def check_user_existence(username: str, email: str):
         """
-        Returns: True if user is not found.
+        Checks if a user exists based on the provided username or email.
+        
+        Returns:
+            - None if the user does not exist.
+            - A string indicating whether the username or email already exists.
         """
         db_path = UserController.get_db_path()
         
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
-                query = "SELECT COUNT(*) FROM users WHERE username = ? OR email = ?"
+                query = "SELECT username, email FROM users WHERE username = ? OR email = ?"
                 cursor.execute(query, (username, email))
-                count = cursor.fetchone()[0]
-                print('connected count: ', count)
+                user = cursor.fetchone()
                 
-            return count == 0
+                if user:
+                    existing_username, existing_email = user
+                    if existing_username == username:
+                        return "Username already exists."
+                    if existing_email == email:
+                        return "Email already exists."
+            
+            return None
         except Exception as e:
             print(f"Error occurred: {e}")
-            return False
+            return "Error checking user existence."
 
     @staticmethod
     def verify_user(username: str, email: str, password: str):

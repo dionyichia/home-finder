@@ -31,6 +31,11 @@ export interface UserRegistrationData {
   importance_rank: string;
 }
 
+export interface UserPartialCredentials {
+  username: string;
+  user_email: string;
+}
+
 export interface UserCredentials {
   username: string;
   user_email: string;
@@ -107,6 +112,26 @@ export const api = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Registration failed: ${response.statusText}`);
+    }
+    
+    return response.json();
+  },
+  
+  /**
+   * Check if a new user with same email and user_name
+   */
+  checkUserExist: async (partialCredentials: UserPartialCredentials): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/check_user_exist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(partialCredentials),
     });
     
     if (!response.ok) {
