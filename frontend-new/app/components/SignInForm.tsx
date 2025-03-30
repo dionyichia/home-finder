@@ -1,14 +1,17 @@
 import React, { useState } from "react";
+import { api } from "../api";
 
 interface SignInFormProps {
-    onToggleForm: () => void;
-  }
+  onToggleForm: () => void;
+}
 
 export default function SignInForm({ onToggleForm }: SignInFormProps) {
   const [formData, setFormData] = useState({
-    email: "",
+    user_email: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -17,10 +20,21 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Sign in form submitted:", formData);
-    // TODO: Handle sign in
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // Call the verifyUser API endpoint with the sign in credentials.
+      const response = await api.verifyUser(formData);
+      console.log("Sign in form submitted:", response);
+      setSuccess(response.message);
+      // Optionally, redirect the user upon successful sign in.
+    } catch (err: any) {
+      console.error("Sign in error:", err);
+      setError(err.message || "Sign in failed.");
+    }
   };
 
   return (
@@ -28,21 +42,27 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
       <h1 className="font-bold">Sign In</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="user_email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email
           </label>
           <input
-            id="email"
-            name="email"
+            id="user_email"
+            name="user_email"
             type="email"
-            value={formData.email}
+            value={formData.user_email}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             placeholder="Insert here"
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
           <input
@@ -62,7 +82,12 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
           Sign In
         </button>
       </form>
-      {/* Toggle link to SignUpForm */}
+      {error && (
+        <p className="mt-4 text-center text-sm text-red-600">{error}</p>
+      )}
+      {success && (
+        <p className="mt-4 text-center text-sm text-green-600">{success}</p>
+      )}
       <p className="mt-4 text-center text-sm text-gray-600">
         Don't have an account?{" "}
         <button onClick={onToggleForm} className="text-blue-600 hover:underline">

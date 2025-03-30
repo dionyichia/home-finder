@@ -25,6 +25,21 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Validate fields for step 1 (basic information)
+  const isStep1Valid =
+    formData.username.trim() !== "" &&
+    formData.user_email.trim() !== "" &&
+    formData.password.trim() !== "";
+
+  // Validate fields for step 2 (additional preferences)
+  const isStep2Valid =
+    formData.price.trim() !== "" &&
+    formData.crime_rate.trim() !== "" &&
+    formData.schools.trim() !== "" &&
+    formData.malls.trim() !== "" &&
+    formData.transport.trim() !== "" &&
+    formData.importance_rank.trim() !== "";
+
   // Update state when input values change.
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -33,11 +48,24 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
     });
   };
 
-  // Step 1 submission: move to step 2.
-  const handleNext = (e: React.FormEvent<HTMLFormElement>) => {
+  // Step 1 submission: Check if user exists and move to step 2 if not.
+  const handleNext = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Optionally validate basic fields here.
-    setStep(2);
+    if (!isStep1Valid) return;
+    setError(null);
+
+    try {
+      // Call the checkUserExist API method with partial credentials
+      await api.checkUserExist({
+        username: formData.username,
+        user_email: formData.user_email,
+      });
+      // If no error thrown, proceed to step 2
+      setStep(2);
+    } catch (err: any) {
+      // If an error occurs (i.e. user exists), show an error message.
+      setError(err.message || "User already exists, please try again.");
+    }
   };
 
   // Final form submission in step 2.
@@ -46,11 +74,13 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
     setError(null);
     setSuccess(null);
 
+    if (!isStep2Valid) return; // Prevent submission if fields are missing
+
     try {
       const response = await api.registerUser(formData);
       console.log("Form submitted:", response);
       setSuccess(response.message);
-      // Optionally reset form or redirect upon success.
+      // Optionally, reset form or redirect upon success.
     } catch (err: any) {
       console.error("Registration error:", err);
       setError(err.message || "Registration failed.");
@@ -59,13 +89,17 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-      {/* Conditionally change the heading based on the current step */}
-      <h1 className="font-bold">{step === 1 ? "Sign Up" : "Set Preferences"}</h1>
+      <h1 className="font-bold">
+        {step === 1 ? "Sign Up" : "Set Preferences"}
+      </h1>
       {step === 1 && (
         <form onSubmit={handleNext} className="space-y-4">
           {/* Basic Registration Fields */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700"
+            >
               Name
             </label>
             <input
@@ -79,7 +113,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="user_email" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="user_email"
+              className="block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -93,7 +130,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <input
@@ -111,7 +151,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
           </p>
           <button
             type="submit"
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            disabled={!isStep1Valid}
+            className={`w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+              !isStep1Valid ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             Next
           </button>
@@ -120,9 +163,12 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
 
       {step === 2 && (
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Additional Fields for Preferences */}
+          {/* Additional Registration Fields */}
           <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="price"
+              className="block text-sm font-medium text-gray-700"
+            >
               Price
             </label>
             <input
@@ -136,7 +182,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="crime_rate" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="crime_rate"
+              className="block text-sm font-medium text-gray-700"
+            >
               Crime Rate
             </label>
             <input
@@ -150,7 +199,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="schools" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="schools"
+              className="block text-sm font-medium text-gray-700"
+            >
               Schools
             </label>
             <input
@@ -164,7 +216,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="malls" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="malls"
+              className="block text-sm font-medium text-gray-700"
+            >
               Malls
             </label>
             <input
@@ -178,7 +233,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="transport" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="transport"
+              className="block text-sm font-medium text-gray-700"
+            >
               Transport
             </label>
             <input
@@ -192,7 +250,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="importance_rank" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="importance_rank"
+              className="block text-sm font-medium text-gray-700"
+            >
               Importance Rank
             </label>
             <input
@@ -207,7 +268,10 @@ export default function SignUpForm({ onToggleForm }: SignUpFormProps) {
           </div>
           <button
             type="submit"
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            disabled={!isStep2Valid}
+            className={`w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+              !isStep2Valid ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             Submit
           </button>
