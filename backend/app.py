@@ -140,9 +140,9 @@ def update_user_info():
     data = request.get_json()
     user_id = data['user_id']  # Get user_id directly instead of verifying again
     
-    new_username = data['new_username']
-    new_user_email = data['new_user_email']
-    new_password = data['new_password']
+    new_username = data.get('new_username','')
+    new_user_email = data.get('new_user_email','')
+    new_password = data.get('new_password','')
 
     preferences = {
         'price': data['price'],
@@ -161,10 +161,10 @@ def update_user_info():
         preferences=preferences
     )
     
-    if result:
+    if result == True:
         return jsonify({"message": "User details changed successfully!"}), 200
     else:
-        return jsonify({"message": "Failed to update user details!"}), 400
+        return jsonify({"message": result}), 400
 
 
 # Remove user 
@@ -175,7 +175,7 @@ def remove_user():
     user_email = data['user_email']
     password = data['password']
     
-    user_id = User.UserController.verify_user(username=username, email=user_email, password=password)
+    user_id = User.UserController.verify_user(username_or_email=user_email, password=password)
     
     if user_id:
         # First remove user's related data (preferences, favorites, notifications)
@@ -194,7 +194,7 @@ def get_user_profile():
     if not user_id:
         return jsonify({"message": "User ID is required!"}), 400
     
-    # Get user details
+    # Get user details    
     user_details = User.UserController.get_user_login_details(user_id)
     if not user_details:
         return jsonify({"message": "User not found!"}), 404
@@ -210,7 +210,9 @@ def get_user_profile():
     notifications_count = len(notifications) if notifications else 0
     
     response = {
-        "user": user_details,
+        "user_id": user_details["user_id"],
+        "user_email": user_details['email'],
+        "username": user_details["username"],
         "preferences": preferences,
         "favorites_count": favorites_count,
         "notifications_count": notifications_count

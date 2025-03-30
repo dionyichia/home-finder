@@ -13,10 +13,10 @@ export interface ScoredLocation {
 export interface UserPreferences {
   price: string;
   crime_rate: string;
-  schools: string;
-  malls: string;
-  transport: string;
-  importance_rank: string;
+  num_schools: string;
+  num_malls: string;
+  num_transport: string;
+  importance_rank: string[];
 }
 
 export interface UserRegistrationData {
@@ -28,7 +28,7 @@ export interface UserRegistrationData {
   schools: string;
   malls: string;
   transport: string;
-  importance_rank: string;
+  importance_rank: string[];
 }
 
 export interface UserPartialCredentials {
@@ -36,8 +36,14 @@ export interface UserPartialCredentials {
   user_email: string;
 }
 
-export interface UserCredentials {
+export interface LoginCredentials {
   username_or_email: string;
+  password: string;
+}
+
+export interface UserCredentials {
+  username: string;
+  user_email: string;
   password: string;
 }
 
@@ -51,11 +57,13 @@ export interface UserUpdateData {
   schools: string;
   malls: string;
   transport: string;
-  importance_rank: string;
+  importance_rank: string[];
 }
 
 export interface UserProfile {
-  user: Record<string, any>;
+  username: string;
+  user_email: string;
+  password: string;
   preferences: UserPreferences;
   favorites_count: number;
   notifications_count: number;
@@ -104,7 +112,7 @@ export const api = {
   /**
    * Register a new user
    */
-  registerUser: async (userData: UserRegistrationData): Promise<{ message: string }> => {
+  registerUser: async (userData: UserRegistrationData): Promise<{ message: string, user_id: number }> => {
     const response = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
       headers: {
@@ -144,7 +152,7 @@ export const api = {
   /**
    * Verify user credentials
    */
-  verifyUser: async (credentials: UserCredentials): Promise<{ message: string, user_id: number }> => {
+  verifyUser: async (credentials: LoginCredentials): Promise<{ message: string, user_id: number }> => {
     const response = await fetch(`${API_BASE_URL}/verify_user`, {
       method: 'POST',
       headers: {
@@ -165,6 +173,7 @@ export const api = {
    * Update user information
    */
   updateUserInfo: async (userData: UserUpdateData): Promise<{ message: string }> => {
+    console.log("here1 ", userData)
     const response = await fetch(`${API_BASE_URL}/update_user_info`, {
       method: 'POST',
       headers: {
@@ -172,11 +181,13 @@ export const api = {
       },
       body: JSON.stringify(userData),
     });
+    console.log("here2", response)
     
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || `Update failed: ${response.statusText}`);
     }
+    console.log("here3")
     
     return response.json();
   },
@@ -203,15 +214,9 @@ export const api = {
   
   /**
    * Get user profile
-   */
+   */  
   getUserProfile: async (userId: number): Promise<UserProfile> => {
-    const response = await fetch(`${API_BASE_URL}/get_user_profile`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: userId }),
-    });
+    const response = await fetch(`${API_BASE_URL}/get_user_profile?user_id=${userId}`);
     
     if (!response.ok) {
       const errorData = await response.json();

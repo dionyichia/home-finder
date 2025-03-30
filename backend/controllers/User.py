@@ -41,7 +41,7 @@ class UserController:
     @staticmethod
     def change_user_details(user_id: int, new_username: str, new_user_email: str, new_password: str, preferences: list):
         """
-        Updates user preferences.
+        Updates user details and preferences, skipping empty fields.
 
         Returns: True if updated, False if error.
         """
@@ -51,32 +51,52 @@ class UserController:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
 
-                # Check if the user_id exists in the preferences table
-                cursor.execute("SELECT COUNT(*) FROM users WHERE user_id = ?", (user_id,))
-                exists = cursor.fetchone()[0] > 0
-
-                if exists:
-                    # Update the existing user preferences
-                    update_query = """
-                    UPDATE users 
-                    SET username = ?, email = ?, 
-                        password = ?
-                    WHERE user_id = ?
-                    """
-                    cursor.execute(update_query, (new_username, new_user_email, new_password, 
-                                                user_id))
-                    # Commit the transaction
-                    conn.commit()
-
-                else:
+                # Check if the user_id exists
+                cursor.execute("SELECT username, email, password FROM users WHERE user_id = ?", (user_id,))
+                result = cursor.fetchone()
+                
+                if not result:
                     print(f"Error occurred: User not found in users")
                     return False
+                    
+                current_username, current_email, current_password = result
                 
-            Preferences.PreferenceController.add_user_preferences(user_id=user_id, preferences=preferences)
+                # Only update non-empty fields
+                update_parts = []
+                params = []
+                
+                if new_username != "":
+                    update_parts.append("username = ?")
+                    params.append(new_username)
+                
+                if new_user_email != "":
+                    update_parts.append("email = ?")
+                    params.append(new_user_email)
+                
+                if new_password != "":
+                    update_parts.append("password = ?")
+                    params.append(new_password)
+                
+                # Only proceed with user update if there are fields to update
+                if update_parts:
+                    update_query = f"""
+                    UPDATE users 
+                    SET {', '.join(update_parts)}
+                    WHERE user_id = ?
+                    """
+                    params.append(user_id)
+                    cursor.execute(update_query, params)
+                    conn.commit()
+                
+            # Update preferences regardless of user detail changes
+            if preferences:
+                Preferences.PreferenceController.add_user_preferences(user_id=user_id, preferences=preferences)
+                
             return True
         except Exception as e:
             print(f"Error occurred: {e}")
-            return False
+            return str(e)
+        
     @staticmethod
     def check_user_existence(username: str, email: str):
         """
