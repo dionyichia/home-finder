@@ -37,8 +37,7 @@ export interface UserPartialCredentials {
 }
 
 export interface UserCredentials {
-  username: string;
-  user_email: string;
+  username_or_email: string;
   password: string;
 }
 

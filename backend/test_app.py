@@ -55,18 +55,18 @@ def test_sort_endpoint(client, create_test_user):
     
     print("Test with valid sorting categories =======")
     
-    # # Test each category individually with the correct URL for each
-    # for cat in ["price", "crime_rate", "num_schools", "num_malls", "num_transport"]:
-    #     print(f"Sorting for category {cat}")
-    #     response = client.get(f'/sort?sort_by={cat}')
-    #     assert response.status_code == 200
-    #     data = json.loads(response.data)
-    #     print(data[:3] if len(data) >= 3 else data)
-    #     print("\n")
-    #     assert isinstance(data, list)
-    #     # Verify the data is sorted correctly (higher values first for these categories)
-    #     if len(data) >= 2:
-    #         assert data[0][1] >= data[1][1], f"Results for {cat} are not properly sorted"
+    # Test each category individually with the correct URL for each
+    for cat in ["price", "crime_rate", "num_schools", "num_malls", "num_transport"]:
+        print(f"Sorting for category {cat}")
+        response = client.get(f'/sort?sort_by={cat}')
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        print(data[:3] if len(data) >= 3 else data)
+        print("\n")
+        assert isinstance(data, list)
+        # Verify the data is sorted correctly (higher values first for these categories)
+        if len(data) >= 2:
+            assert data[0][1] >= data[1][1], f"Results for {cat} are not properly sorted"
     
     # Test specifically for the 'score' category with user_id
     print("Sorting for category score")
@@ -169,10 +169,23 @@ def test_verify_user_endpoint(client):
                data=json.dumps(test_user),
                content_type='application/json')
     
-    # Test successful verification
+    # Test successful verification by username
     credentials = {
-        "username": "verifyuser",
-        "user_email": "verify@example.com",
+        "username_or_email": "verifyuser",
+        # "user_email": "verify@example.com",
+        "password": "password123"
+    }
+    response = client.post('/verify_user',
+                         data=json.dumps(credentials),
+                         content_type='application/json')
+    data = json.loads(response.data)
+    assert response.status_code == 200
+    assert "user_id" in data
+
+    # Test successful verification by email
+    credentials = {
+        # "username": "verifyuser",
+        "username_or_email": "verify@example.com",
         "password": "password123"
     }
     response = client.post('/verify_user',
@@ -184,8 +197,8 @@ def test_verify_user_endpoint(client):
     
     # Test failed verification
     wrong_credentials = {
-        "username": "verifyuser",
-        "user_email": "verify@example.com",
+        "username_or_email": "verifyuser",
+        # "user_email": "verify@example.com",
         "password": "wrongpassword"
     }
     response = client.post('/verify_user',

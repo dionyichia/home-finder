@@ -108,7 +108,7 @@ class UserController:
             return "Error checking user existence."
 
     @staticmethod
-    def verify_user(username: str, email: str, password: str):
+    def verify_user(username_or_email: str, password: str):
         """
         Verifies user login credentials.
 
@@ -119,8 +119,8 @@ class UserController:
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
-                query = "SELECT user_id FROM users WHERE username = ? AND email = ? AND password = ?"
-                cursor.execute(query, (username, email, password))
+                query = "SELECT user_id FROM users WHERE (username = ? OR email = ?) AND password = ?"
+                cursor.execute(query, (username_or_email, username_or_email, password))
                 result = cursor.fetchone()
                 
                 if result:

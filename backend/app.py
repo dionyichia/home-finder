@@ -104,11 +104,10 @@ def verify_user():
     Return: User ID if verified
     """
     data = request.get_json()
-    username = data['username']
-    user_email = data['user_email']
+    username_or_email = data['username_or_email']
     password = data['password']
 
-    user_id = User.UserController.verify_user(username=username, email=user_email, password=password)
+    user_id = User.UserController.verify_user(username_or_email=username_or_email, password=password)
 
     if user_id:
         return jsonify({"message": "Verified User!", "user_id": user_id}), 200
