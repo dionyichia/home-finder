@@ -37,15 +37,16 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
     }
   };
 
+  // Validate that both fields are filled in.
+  const isFormValid =
+    formData.user_email.trim() !== "" && formData.password.trim() !== "";
+
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
       <h1 className="font-bold">Sign In</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label
-            htmlFor="user_email"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="user_email" className="block text-sm font-medium text-gray-700">
             Email
           </label>
           <input
@@ -59,10 +60,7 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
           />
         </div>
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
           <input
@@ -77,7 +75,10 @@ export default function SignInForm({ onToggleForm }: SignInFormProps) {
         </div>
         <button
           type="submit"
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          disabled={!isFormValid}
+          className={`w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+            !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           Sign In
         </button>
