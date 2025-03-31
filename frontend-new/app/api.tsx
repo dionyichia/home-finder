@@ -230,13 +230,7 @@ export const api = {
    * Get user favorites
    */
   getUserFavorites: async (userId: number): Promise<{ favorites: any[] }> => {
-    const response = await fetch(`${API_BASE_URL}/get_user_favourites`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: userId }),
-    });
+    const response = await fetch(`${API_BASE_URL}/get_user_favourites?user_id=${userId}`);
     
     if (!response.ok) {
       const errorData = await response.json();
@@ -342,13 +336,7 @@ export const api = {
    * Get user notifications
    */
   getUserNotifications: async (userId: number): Promise<{ notifications: any[] }> => {
-    const response = await fetch(`${API_BASE_URL}/get_user_notifications`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: userId }),
-    });
+    const response = await fetch(`${API_BASE_URL}/get_user_notifications?user_id=${userId}`);
     
     if (!response.ok) {
       const errorData = await response.json();
