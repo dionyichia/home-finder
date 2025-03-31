@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MagnifyingGlassIcon, MapPinIcon, XMarkIcon, StarIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, MapPinIcon, XMarkIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as SolidHeartIcon } from "@heroicons/react/24/solid";
 import { api } from '../api';
 import ViewLocation from "../components/ViewLocation";
 
@@ -308,156 +309,136 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ userId }) => {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold mb-6">My Favorite Locations</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column - Search and Favorites List */}
-        <div className="lg:col-span-1">
-          {/* Search Bar */}
-          <div className="mb-6 relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search For Location"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10"
-            />
-            <button 
-              onClick={handleSearch} 
-              className="absolute right-2 top-2 text-gray-500"
-            >
-              <MagnifyingGlassIcon className="w-5 h-5" />
-            </button>
+        <div className="min-h-screen w-full bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-white py-10 px-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">My Favorite Locations</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Left column - Search and Favorites List */}
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Search For Location"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 pr-10 bg-white/70 text-black placeholder-gray-500"
+              />
+              <button 
+                onClick={handleSearch} 
+                className="absolute right-3 top-2.5 text-gray-500"
+              >
+                <MagnifyingGlassIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Saved Locations</h2>
+            {loading && !searchResults ? (
+              <div className="text-center py-4 text-gray-600">Loading...</div>
+            ) : favorites.length === 0 ? (
+              <div className="text-center text-gray-600 p-4 bg-white/40 rounded-lg border border-white/20">
+                <p>No favorite locations</p>
+                <p className="text-sm mt-2">Search for locations to add them to your favorites</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                {favorites.map((location) => (
+                  <div 
+                    key={location.location_name}
+                    className="flex justify-between items-center p-3 rounded-lg bg-white/60 backdrop-blur-md hover:bg-white/80 transition cursor-pointer"
+                    onClick={() => handleLocationSelect(location.location_name)}
+                  >
+                    <span className="font-medium text-gray-900">{location.location_name}</span>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFavorite(location.location_name);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                      aria-label="Remove from favorites"
+                    >
+                      <XMarkIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
+          {/* Right column - All Locations List */}
+          <div ref={locationDetailsRef} className="lg:col-span-2">
+            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">All Locations</h2>
 
-          {/* Favorites List */}
-          <h2 className="text-xl font-bold mb-4">Saved Locations</h2>
-          {loading && !searchResults ? (
-            <div className="text-center py-4">Loading...</div>
-          ) : favorites.length === 0 ? (
-            <div className="text-gray-500 text-center py-4 bg-gray-50 rounded-md">
-              <p>No favorite locations</p>
-              <p className="text-sm mt-2">Search for locations to add them to your favorites</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {favorites.map((location) => (
-                <div 
-                  key={location.location_name}
-                  className="flex justify-between items-center p-3 rounded-md hover:bg-gray-100 transition cursor-pointer bg-gray-50"
-                  onClick={() => handleLocationSelect(location.location_name)}
-                >
-                  <span className="font-medium">{location.location_name}</span>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFavorite(location.location_name);
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                    aria-label="Remove from favorites"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
+              {loading && searchTerm ? (
+                <div className="text-center py-4 text-gray-600">Searching...</div>
+              ) : displayLocations.length === 0 ? (
+                <div className="text-center text-gray-600 p-4 bg-white/40 rounded-lg border border-white/20">
+                  <p>No locations found</p>
+                  <p className="text-sm mt-2">Try a different search term</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Right column - All Locations List */}
-        <div ref={locationDetailsRef} className="lg:col-span-2">
-          <h2 className="text-xl font-bold mb-4">All Locations</h2>
-          
-          {loading && searchTerm ? (
-            <div className="text-center py-4">Searching...</div>
-          ) : displayLocations.length === 0 ? (
-            <div className="text-gray-500 text-center py-4 bg-gray-50 rounded-md">
-              <p>No locations found</p>
-              <p className="text-sm mt-2">Try a different search term</p>
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-                {displayLocations.map((location) => {
-                  const isFavorite = isLocationFavorite(location.location_name);
-                  const isSelected = searchResults?.location_name === location.location_name;
-                  
-                  return (
-                    <div 
-                      key={location.location_name}
-                      className={`flex justify-between items-center p-3 rounded-md 
-                        transition cursor-pointer border 
-                        ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-transparent bg-white hover:bg-gray-100'}`}
-                      onClick={() => handleLocationSelect(location.location_name)}
-                    >
-                      <div className="flex-1">
-                        <span className="font-medium">{location.location_name}</span>
-                        
-                        {/* Show brief stats if this is the selected location and we have data */}
-                        {isSelected && searchResults && (
-                          <div className="mt-2 text-sm text-gray-600 grid grid-cols-3 gap-2">
-                            <div>
-                              <span className="font-semibold">Crime Rate:</span> {searchResults.crime_rate}%
-                            </div>
-                            <div>
-                              <span className="font-semibold">Schools:</span> {searchResults.schools?.length || 0}
-                            </div>
-                            <div>
-                              <span className="font-semibold">Transport:</span> {searchResults.transport?.length || 0}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          isFavorite 
-                            ? removeFavorite(location.location_name)
-                            : addToFavorites(location.location_name);
-                        }}
-                        className={`flex items-center gap-1 px-3 py-1 rounded-md transition
-                          ${isFavorite 
-                            ? 'text-yellow-600 hover:text-red-600 bg-yellow-50 hover:bg-red-50' 
-                            : 'text-gray-600 hover:text-yellow-600 bg-gray-100 hover:bg-yellow-50'
+              ) : (
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  {displayLocations.map((location) => {
+                    const isFavorite = isLocationFavorite(location.location_name);
+                    const isSelected = searchResults?.location_name === location.location_name;
+                    
+                    return (
+                      <div 
+                        key={location.location_name}
+                        className={`flex justify-between items-center p-4 rounded-lg transition border
+                          ${isSelected 
+                            ? 'bg-blue-100/60 border-blue-500' 
+                            : 'bg-white/60 hover:bg-white/80 border-white/20 backdrop-blur-md'
                           }`}
-                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        onClick={() => handleLocationSelect(location.location_name)}
                       >
-                        {isFavorite ? (
-                          <>
-                            <StarIcon className="w-5 h-5 fill-yellow-500 stroke-yellow-500" />
-                            <span className="hidden sm:inline">Favorited</span>
-                          </>
-                        ) : (
-                          <>
-                            <StarIcon className="w-5 h-5" />
-                            <span className="hidden sm:inline">Favorite</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-900">{location.location_name}</span>
+                          {isSelected && searchResults && (
+                            <div className="mt-2 text-sm text-gray-700 grid grid-cols-3 gap-2">
+                              <div><strong>Crime:</strong> {searchResults.crime_rate}%</div>
+                              <div><strong>Schools:</strong> {searchResults.schools?.length || 0}</div>
+                              <div><strong>Transport:</strong> {searchResults.transport?.length || 0}</div>
+                            </div>
+                          )}
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            isFavorite 
+                              ? removeFavorite(location.location_name)
+                              : addToFavorites(location.location_name);
+                          }}
+                          className={`flex items-center gap-1 px-3 py-1 rounded-md transition font-medium
+                            ${isFavorite 
+                              ? 'text-yellow-700 bg-yellow-100 hover:bg-red-100 hover:text-red-600' 
+                              : 'text-gray-700 bg-white/70 hover:bg-yellow-100 hover:text-yellow-600'
+                            }`}
+                        >
+                          {isFavorite ? (
+  <SolidHeartIcon className="w-5 h-5 text-pink-500" />
+) : (
+  <HeartIcon className="w-5 h-5 text-gray-600 hover:text-pink-500 transition" />
+)}
+                          <span className="hidden sm:inline">{isFavorite ? "Favorited" : "Favorite"}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* View Section */}
+              {searchResults && (
+                <div className="mt-6 bg-white/70 rounded-xl shadow-lg p-6 border border-white/30">
+                  <h3 className="text-2xl font-semibold mb-4 text-gray-800">{searchResults.location_name} Details</h3>
+                  <ViewLocation locationName={searchResults.location_name} />
+                </div>
+              )}
             </div>
-          )}
-          
-          {/* Detailed View of Selected Location */}
-          {searchResults && (
-            <div className="mt-6 bg-white rounded-md shadow-sm p-4">
-              <h3 className="text-xl font-bold mb-4">{searchResults.location_name} Details</h3>
-              <ViewLocation locationName={searchResults.location_name} />
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

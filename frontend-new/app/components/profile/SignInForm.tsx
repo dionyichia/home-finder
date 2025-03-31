@@ -29,7 +29,7 @@ export default function SignInForm({ onToggleForm, onLoginSuccess }: SignInFormP
     try {
       const response = await api.verifyUser(formData);
       setSuccess("Login successful!");
-      onLoginSuccess(response.user_id); // Pass user ID to ProfilePage
+      onLoginSuccess(response.user_id);
     } catch (err: any) {
       setError(err.message || "Sign in failed.");
     }
@@ -38,11 +38,12 @@ export default function SignInForm({ onToggleForm, onLoginSuccess }: SignInFormP
   const isFormValid = formData.username_or_email.trim() !== "" && formData.password.trim() !== "";
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg">
-      <h1 className="text-2xl font-semibold text-purple-700 text-center">Sign In</h1>
+    <div className="w-full max-w-md p-8 bg-white/30 backdrop-blur-md rounded-xl shadow-xl border border-white/20 transition-all duration-300">
+      <h2 className="text-2xl font-bold text-center mb-6 text-purple-700">Sign In</h2>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="username_or_email" className="block text-sm font-medium text-gray-600">
+          <label htmlFor="username_or_email" className="block text-sm font-medium text-gray-700">
             Email or Username
           </label>
           <input
@@ -51,12 +52,13 @@ export default function SignInForm({ onToggleForm, onLoginSuccess }: SignInFormP
             type="text"
             value={formData.username_or_email}
             onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-purple-500 focus:border-purple-500"
             placeholder="Enter email or username"
+            className="mt-1 block w-full border border-gray-300 rounded-md p-3 shadow-sm focus:ring-purple-500 focus:border-purple-500 bg-white/70 backdrop-blur-sm"
           />
         </div>
+
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-600">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
           <input
@@ -65,25 +67,30 @@ export default function SignInForm({ onToggleForm, onLoginSuccess }: SignInFormP
             type="password"
             value={formData.password}
             onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-purple-500 focus:border-purple-500"
             placeholder="Enter password"
+            className="mt-1 block w-full border border-gray-300 rounded-md p-3 shadow-sm focus:ring-purple-500 focus:border-purple-500 bg-white/70 backdrop-blur-sm"
           />
         </div>
+
         <button
           type="submit"
           disabled={!isFormValid}
-          className={`w-full px-4 py-2 rounded-md transition duration-200 ${
-            isFormValid ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-gray-300 text-gray-600 cursor-not-allowed"
+          className={`w-full px-4 py-2 rounded-md font-medium transition duration-200 ${
+            isFormValid
+              ? "bg-gradient-to-r from-purple-500 to-purple-700 text-white hover:from-purple-600 hover:to-purple-800"
+              : "bg-gray-300 text-gray-600 cursor-not-allowed"
           }`}
         >
           Sign In
         </button>
       </form>
+
       {error && <p className="mt-3 text-center text-red-600 text-sm">{error}</p>}
       {success && <p className="mt-3 text-center text-green-600 text-sm">{success}</p>}
-      <p className="mt-4 text-center text-sm text-gray-600">
-        Don't have an account?{" "}
-        <button onClick={onToggleForm} className="text-purple-600 hover:underline">
+
+      <p className="mt-4 text-center text-sm text-gray-700">
+        Don’t have an account?{" "}
+        <button onClick={onToggleForm} className="text-purple-600 hover:underline font-medium">
           Sign up
         </button>
       </p>

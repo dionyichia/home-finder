@@ -8,15 +8,20 @@ interface LocationBubbleProps {
 export default function LocationBubbleComp({ rank, onClick }: LocationBubbleProps) {
   return (
     <div 
-      className="flex items-center justify-center rounded-full bg-blue-500 text-white font-bold shadow-lg cursor-pointer hover:bg-blue-600 transition-colors duration-200"
+      className="flex items-center justify-center rounded-full text-white font-bold cursor-pointer transition-transform hover:scale-110 shadow-xl"
       style={{ 
-        width: '32px', 
-        height: '32px',
-        fontSize: '14px'
+        width: '42px',
+        height: '42px',
+        fontSize: '13px',
+        background: 'linear-gradient(145deg, rgba(186, 72, 255, 0.8), rgba(255, 94, 177, 0.8))',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        boxShadow: '0 0 10px rgba(186, 72, 255, 0.5)', // glow effect
       }}
       onClick={onClick}
     >
-      {rank}
+      #{rank}
     </div>
   );
 }

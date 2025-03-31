@@ -162,11 +162,11 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
   };
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border-t-4 border-purple-300">
-      <h1 className="text-2xl font-bold text-purple-600 mb-6 text-center">
+    <div className="bg-white/30 backdrop-blur-md p-8 rounded-xl shadow-xl w-full max-w-md border border-white/20 transition-all duration-300">
+      <h1 className="text-2xl font-bold text-purple-700 mb-6 text-center">
         {step === 1 ? "Create Account" : "Set Home Preferences"}
       </h1>
-      
+
       {/* Progress indicator */}
       <div className="flex mb-6">
         <div className={`h-1 flex-1 ${step === 1 ? 'bg-purple-500' : 'bg-blue-300'} rounded-l`}></div>
@@ -179,7 +179,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-lg font-bold text-gray-700"
             >
               Username
             </label>
@@ -189,7 +189,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
               type="text"
               value={formData.username}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300 bg-white"
               placeholder="John Smith"
               required
             />
@@ -198,7 +198,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
           <div>
             <label
               htmlFor="user_email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-lg font-bold text-gray-700"
             >
               Email Address
             </label>
@@ -208,7 +208,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
               type="email"
               value={formData.user_email}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300 bg-white"
               placeholder="john@example.com"
               required
             />
@@ -217,7 +217,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-lg font-bold text-gray-700"
             >
               Password
             </label>
@@ -227,7 +227,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
               type="password"
               value={formData.password}
               onChange={handleChange}
-              className={`mt-1 block w-full border ${passwordError ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300`}
+              className={`mt-1 block w-full border ${passwordError ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300 bg-white`}
               placeholder="Minimum 8 characters"
               required
               minLength={8}
@@ -256,7 +256,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             <div className="flex justify-between items-center">
               <label
                 htmlFor="price"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-lg font-bold text-gray-700"
               >
                 Price
               </label>
@@ -286,7 +286,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             <div className="flex justify-between items-center">
               <label
                 htmlFor="crime_rate"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-lg font-bold text-gray-700"
               >
                 Crime Rate
               </label>
@@ -315,7 +315,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             <div className="flex justify-between items-center">
               <label
                 htmlFor="schools"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-lg font-bold text-gray-700"
               >
                 Number of Schools
               </label>
@@ -344,7 +344,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             <div className="flex justify-between items-center">
               <label
                 htmlFor="malls"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-lg font-bold text-gray-700"
               >
                 Number of Malls
               </label>
@@ -373,7 +373,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             <div className="flex justify-between items-center">
               <label
                 htmlFor="transport"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-lg font-bold text-gray-700"
               >
                 Number of Stations
               </label>

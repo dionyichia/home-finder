@@ -19,27 +19,23 @@ export default function ProfilePage() {
     setUserId(userId);
     sessionStorage.setItem("user_id", userId.toString());
     setIsLoggedIn(true);
-    navigate("/")
+    navigate("/");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-blue-50 to-white">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] px-4">
       {isLoggedIn ? (
         <UserProfile />
+      ) : showSignIn ? (
+        <SignInForm 
+          onToggleForm={() => setShowSignIn(false)} 
+          onLoginSuccess={handleLogin} 
+        />
       ) : (
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
-          {showSignIn ? (
-            <SignInForm 
-              onToggleForm={() => setShowSignIn(false)} 
-              onLoginSuccess={handleLogin} 
-            />
-          ) : (
-            <SignUpForm 
-              onToggleForm={() => setShowSignIn(true)}
-              onSignupSuccess={handleLogin} 
-            />
-          )}
-        </div>
+        <SignUpForm 
+          onToggleForm={() => setShowSignIn(true)} 
+          onSignupSuccess={handleLogin} 
+        />
       )}
     </div>
   );
