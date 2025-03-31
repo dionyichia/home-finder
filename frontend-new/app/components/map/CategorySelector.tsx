@@ -31,23 +31,26 @@ const CategorySelector = ({ onCategoryChange, activeCategory }) => {
   };
 
   return (
-    <div className="flex gap-2 overflow-x-auto py-2 px-4 bg-white shadow-md rounded-lg">
-      {categories.map((category) => (
-        <button
-          key={category.name}
-          className={`flex items-center gap-1 px-4 py-2 rounded-full border ${
-            selectedCategory === category.query ? "bg-gray-900 text-white" : "bg-white border-gray-300 text-gray-800"
-          } hover:bg-gray-200 transition`}
-          onClick={() => handleFilterClick(category.query)}
-          disabled={loading}
-        >
-          {category.icon}
-          <span className="text-sm">{category.name}</span>
-        </button>
-      ))}
-      {loading && <p className="text-sm text-gray-600 ml-2">Loading...</p>}
-      {error && <p className="text-sm text-red-500 ml-2">{error}</p>}
-    </div>
+    <div className="flex gap-2 overflow-x-auto py-3 px-4 bg-white/20 backdrop-blur-md rounded-2xl shadow-xl border border-white/30">
+  {categories.map((category) => (
+    <button
+      key={category.name}
+      className={`flex items-center gap-1 px-4 py-2 rounded-full border transition text-sm font-medium
+        ${
+          selectedCategory === category.query
+            ? "bg-gray-900 text-white shadow-lg"
+            : "bg-white/60 text-gray-900 border-gray-300 hover:bg-white/80"
+        }`}
+      onClick={() => handleFilterClick(category.query)}
+      disabled={loading}
+    >
+      {category.icon}
+      <span>{category.name}</span>
+    </button>
+  ))}
+  {loading && <p className="text-sm text-gray-600 ml-2">Loading...</p>}
+  {error && <p className="text-sm text-red-500 ml-2">{error}</p>}
+</div>
   );
 };
 

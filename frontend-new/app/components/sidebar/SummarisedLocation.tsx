@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useMap } from '~/contexts/MapContext';
 import { useRefocusMap } from '~/hooks/useRefocusMap';
 
@@ -18,107 +19,98 @@ interface SummarisedLocationProps {
   activeCategory: string;
 }
 
-export default function SummarisedLocation({ 
-  locationData, 
-  score, 
-  rank, 
-  activeCategory 
+export default function SummarisedLocation({
+  locationData,
+  score,
+  rank,
+  activeCategory
 }: SummarisedLocationProps) {
   const navigate = useNavigate();
-  const { mapInstance, selectedLocationCallback } = useMap();
+  const { selectedLocationCallback } = useMap();
   const { refocusByLocationName } = useRefocusMap(selectedLocationCallback);
-  
-  // Format the score to 2 decimal places
+
   const formattedScore = score.toFixed(2);
-  
-  // Get the icon based on active category
+
   const getCategoryIcon = (category: string) => {
-    switch(category.toLowerCase()) {
-      case 'price':
-        return '💰';
-      case 'crime_rate':
-        return '🛡️';
-      case 'num_transport':
-        return '🚆';
-      case 'num_malls':
-        return '🛒';
-      case 'num_schools':
-        return '🏫';
-      default:
-        return '📊';
+    switch (category.toLowerCase()) {
+      case 'price': return '💰';
+      case 'crime_rate': return '🛡️';
+      case 'num_transport': return '🚆';
+      case 'num_malls': return '🛒';
+      case 'num_schools': return '🏫';
+      default: return '📊';
     }
   };
 
-  // Get the value for the active category
   const getCategoryValue = (category: string) => {
-    // For price, we might want to format it as currency
     if (category.toLowerCase() === 'price') {
       return `$${locationData.price.toLocaleString()}`;
     }
-    
-    // For other categories, just return the value
-    return locationData[category] !== undefined 
-      ? locationData[category].toString() 
+    return locationData[category] !== undefined
+      ? locationData[category].toString()
       : 'N/A';
   };
 
-  // Handle View Details button click
   const handleViewDetails = () => {
-    // Navigate to compare page
-    navigate('/compare', { 
-      state: { 
+    navigate('/compare', {
+      state: {
         locationToAdd: locationData.location_name,
-        shouldTriggerCompare: true 
-      } 
+        shouldTriggerCompare: true
+      }
     });
   };
 
-  // Handle location card click to focus map on this location
   const handleLocationClick = (event: React.MouseEvent) => {
-    // Prevent the click from bubbling up to parent elements
     event.stopPropagation();
-    
-    // Only trigger refocus if the click wasn't on the button
     if (!(event.target as HTMLElement).closest('button')) {
       refocusByLocationName(locationData.location_name);
     }
   };
 
   return (
-    <div 
-      className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+    <div
       onClick={handleLocationClick}
+      className="bg-white/40 border border-white/30 backdrop-blur-md rounded-xl shadow-xl hover:shadow-2xl transition-all duration-200 p-4 cursor-pointer relative"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center">
-          <div className="flex items-center justify-center rounded-full bg-blue-500 text-white font-bold mr-3"
-            style={{ width: '28px', height: '28px', fontSize: '14px' }}>
-            {rank}
-          </div>
-          <h3 className="font-bold text-lg">{locationData.location_name}</h3>
-        </div>
-        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
-          {formattedScore}
+      {/* Rank badge */}
+      <div className="absolute -top-3 -left-3 bg-blue-600 text-white w-7 h-7 text-sm rounded-full flex items-center justify-center shadow-md font-semibold">
+        {rank}
+      </div>
+
+      {/* Title Row */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-md font-semibold text-gray-800 truncate">
+          {locationData.location_name}
+        </h3>
+        <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+          📊 {formattedScore}
         </span>
       </div>
-      
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <div className="text-sm text-gray-700">
-          <span className="mr-1">{getCategoryIcon(activeCategory)}</span>
-          <span className="font-medium">{activeCategory}: </span>
+
+      {/* Info Grid */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700">
+        <div>
+          <span className="inline-flex items-center gap-1">
+            <span>{getCategoryIcon(activeCategory)}</span>
+            <span className="font-medium">{activeCategory}:</span>
+          </span>{' '}
           {getCategoryValue(activeCategory)}
         </div>
-        <div className="text-sm text-gray-700">
-          <span className="mr-1">💰</span>
-          <span className="font-medium">Price: </span>
+        <div>
+          <span className="inline-flex items-center gap-1">
+            <span>💰</span>
+            <span className="font-medium">Price:</span>
+          </span>{' '}
           ${locationData.price.toLocaleString()}
         </div>
       </div>
-      
-      <button 
-        className="mt-3 w-full bg-blue-50 hover:bg-blue-100 text-blue-700 py-1 px-2 rounded text-sm transition-colors duration-200"
+
+      {/* CTA Button */}
+      <button
         onClick={handleViewDetails}
+        className="mt-4 w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-1.5 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200"
       >
+        <MagnifyingGlassIcon className="w-4 h-4" />
         View Details
       </button>
     </div>
