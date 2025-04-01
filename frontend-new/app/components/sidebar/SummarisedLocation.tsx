@@ -38,7 +38,7 @@ export default function SummarisedLocation({
       case 'num_transport': return '🚆';
       case 'num_malls': return '🛒';
       case 'num_schools': return '🏫';
-      default: return '📊';
+      default: return '⭐';
     }
   };
 
@@ -83,7 +83,7 @@ export default function SummarisedLocation({
           {locationData.location_name}
         </h3>
         <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-          📊 {formattedScore}
+          ⭐ {formattedScore}
         </span>
       </div>
 
@@ -95,13 +95,6 @@ export default function SummarisedLocation({
             <span className="font-medium">{activeCategory}:</span>
           </span>{' '}
           {getCategoryValue(activeCategory)}
-        </div>
-        <div>
-          <span className="inline-flex items-center gap-1">
-            <span>💰</span>
-            <span className="font-medium">Price:</span>
-          </span>{' '}
-          ${locationData.price.toLocaleString()}
         </div>
       </div>
 
