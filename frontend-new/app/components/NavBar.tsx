@@ -19,7 +19,7 @@ interface CollapsibleNavBarProps {
   activeCategory: string | null;
 }
 
-export default function CollapsibleNavBar({ locations, activeCategory }: CollapsibleNavBarProps) {
+export default function CollapsibleNavBar({ locations = [], activeCategory }: CollapsibleNavBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredLocations, setFilteredLocations] = useState(locations);
@@ -56,7 +56,7 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
       setFilteredLocations(locations);
     } else {
       const filtered = locations.filter((location) =>
-        location[0].location_name.toLowerCase().includes(searchTerm.toLowerCase())
+        location[0]?.location_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredLocations(filtered);
     }
@@ -215,3 +215,5 @@ export default function CollapsibleNavBar({ locations, activeCategory }: Collaps
     </div>
   );
 }
+
+
