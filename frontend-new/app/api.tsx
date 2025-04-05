@@ -86,15 +86,22 @@ export const api = {
   /**
    * Get all locations sorted by a specific category
    */
-  getSortedLocations: async (sortBy: string): Promise<ScoredLocation[]> => {
-    const response = await fetch(`${API_BASE_URL}/sort?sort_by=${sortBy}`);
-
+  getSortedLocations: async (sortBy: string, userId: string | null): Promise<ScoredLocation[]> => {
+    const params = new URLSearchParams({ sort_by: sortBy });
+  
+    if (userId) {
+      params.append("user_id", userId);
+    }
+  
+    const response = await fetch(`${API_BASE_URL}/sort?${params.toString()}`);
+  
     if (!response.ok) {
       throw new Error(`Error fetching sorted locations: ${response.statusText}`);
     }
-
+  
     return response.json();
   },
+  
   
   /**
    * Search for a location by name

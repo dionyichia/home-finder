@@ -197,6 +197,7 @@ export const useRefocusMap = (
       options: RefocusOptions = {},
       locationName?: string
     ) => {
+      console.log("circular 5")
       if (!mapInstance.current) {
         console.warn('Map instance not available for refocusing');
         return;
@@ -287,6 +288,8 @@ export const useRefocusMap = (
    */
   const refocusByLocationName = useCallback(
     (locationName: string, options?: RefocusOptions) => {
+      console.log("circular 4")
+
       if (!mapInstance.current) {
         console.warn('Map instance not available for refocusing');
         return false;

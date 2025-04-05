@@ -19,7 +19,7 @@ interface CollapsibleNavBarProps {
   activeCategory: string | null;
 }
 
-export default function CollapsibleNavBar({ locations = [], activeCategory }: CollapsibleNavBarProps) {
+export default function CollapsibleNavBar({ locations = [], activeCategory = 'price'}: CollapsibleNavBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredLocations, setFilteredLocations] = useState(locations);
@@ -34,6 +34,7 @@ export default function CollapsibleNavBar({ locations = [], activeCategory }: Co
   } = useRefocusMap(handleLocationSelected);
 
   function handleLocationSelected(locationName: string) {
+    console.log("circular 3", locationName)
     setSearchTerm(locationName);
     setIsOpen(true);
   }
@@ -52,6 +53,7 @@ export default function CollapsibleNavBar({ locations = [], activeCategory }: Co
   }, [setSelectedLocation]);
 
   useEffect(() => {
+    console.log("circular", locations, "search", searchTerm)
     if (!searchTerm.trim()) {
       setFilteredLocations(locations);
     } else {
@@ -68,16 +70,23 @@ export default function CollapsibleNavBar({ locations = [], activeCategory }: Co
     }
   }, [locations]);
 
-  useEffect(() => {
-    setSearchTerm('');
-    if (currentLocationName) {
-      resetMapView();
-    }
-  }, [activeCategory, currentLocationName, resetMapView]);
+  // useEffect(() => {
+  //   setSearchTerm('');
+  //   if (currentLocationName) {
+  //     resetMapView();
+  //   }
+  // }, [activeCategory, currentLocationName, resetMapView]);
 
   useEffect(() => {
-    if (currentLocationName && searchTerm !== currentLocationName) {
-      setSearchTerm(currentLocationName);
+    console.log("circular 2", currentLocationName, currentLocationName)
+    if (currentLocationName && currentLocationName !== currentLocationName) {
+      // Prevent back-and-forth triggering
+      setSearchTerm((prev) => {
+        if (prev !== currentLocationName) {
+          return currentLocationName;
+        }
+        return prev;
+      });
     }
   }, [currentLocationName]);
 

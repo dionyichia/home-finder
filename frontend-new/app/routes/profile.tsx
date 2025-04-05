@@ -3,6 +3,7 @@ import SignUpForm from "~/components/profile/SignUpForm";
 import SignInForm from "~/components/profile/SignInForm";
 import UserProfile from "~/components/profile/UserProfile";
 import { useNavigate } from "react-router";
+import CollapsibleNavBar from "~/components/NavBar";
 
 export default function ProfilePage() {
   const [showSignIn, setShowSignIn] = useState(false);
@@ -23,20 +24,24 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] px-4">
-      {isLoggedIn ? (
-        <UserProfile />
-      ) : showSignIn ? (
-        <SignInForm 
-          onToggleForm={() => setShowSignIn(false)} 
-          onLoginSuccess={handleLogin} 
-        />
-      ) : (
-        <SignUpForm 
-          onToggleForm={() => setShowSignIn(true)} 
-          onSignupSuccess={handleLogin} 
-        />
-      )}
-    </div>
+    <>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] px-4">
+        {isLoggedIn ? (
+          <UserProfile />
+        ) : showSignIn ? (
+          <SignInForm 
+            onToggleForm={() => setShowSignIn(false)} 
+            onLoginSuccess={handleLogin} 
+          />
+        ) : (
+          <SignUpForm 
+            onToggleForm={() => setShowSignIn(true)} 
+            onSignupSuccess={handleLogin} 
+          />
+        )}
+      </div>
+      {/* Integrated NavBar */}
+      <CollapsibleNavBar locations={[]} activeCategory={''}/>
+    </>
   );
 }

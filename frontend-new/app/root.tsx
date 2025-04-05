@@ -10,9 +10,6 @@ import { useEffect, useState } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
 
-import { MapProvider } from "./contexts/MapContext";
-import NavBar from "./components/NavBar";
-
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -59,13 +56,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+
+import { MapProvider } from "./contexts/MapContext";
+
 export default function App() {
   return (
     <ClientOnly>
       <MapProvider>
-        <div className="bg-purple-200 text-gray-700 absolute top-0 left-0 py-2 px-3 z-1">
-          <NavBar/>
-        </div>
         <Outlet />
       </MapProvider>
     </ClientOnly>

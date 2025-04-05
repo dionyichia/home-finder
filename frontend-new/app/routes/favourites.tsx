@@ -3,6 +3,7 @@ import { MagnifyingGlassIcon, MapPinIcon, XMarkIcon, HeartIcon } from "@heroicon
 import { HeartIcon as SolidHeartIcon } from "@heroicons/react/24/solid";
 import { api } from '../api';
 import ViewLocation from "../components/ViewLocation";
+import CollapsibleNavBar from '~/components/NavBar';
 
 // Location geodata interface
 interface LocationGeoData {
@@ -309,7 +310,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ userId }) => {
   };
 
   return (
-        <div className="min-h-screen w-full bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-white py-10 px-6">
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-white py-10 px-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">My Favorite Locations</h1>
         
@@ -437,10 +438,13 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ userId }) => {
                   <ViewLocation locationName={searchResults.location_name} />
                 </div>
               )}
+
             </div>
           </div>
         </div>
       </div>
+      {/* Integrated NavBar */}
+      <CollapsibleNavBar locations={[]} activeCategory={''}/>
     </div>
   );
 };

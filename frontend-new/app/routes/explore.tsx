@@ -90,11 +90,26 @@ export default function Explore() {
 
     // On category change, get the new sorted list of locations from API
     useLayoutEffect(() => {
-        console.log("Getting new sort data")
+        console.log("Getting new sort data,", activeCategory, ",")
         const fetchSortedLocations = async () => {
         if (activeCategory && overlaySourceData) {
+
+            let userId: string | null = null;
+
+            if (activeCategory == 'score') {
+                // Check whether has logged in else just log error and swtich to price 
+                userId = sessionStorage.getItem("user_id");
+                console.log("userId", userId)
+
+                if (!userId) {
+                    console.log("User not logged in!")
+                    setActiveCategory("price")
+                    userId = null;
+                }
+            }
+
             // Jsonified List of list of tuples, (ranked location, their score), location is a dict of location, each db coloumn headder is a key.
-            const sorted_locations = await api.getSortedLocations(activeCategory);
+            const sorted_locations = await api.getSortedLocations(activeCategory, userId);
 
             // Update location bubbles with the new data, 
             if (sorted_locations && sorted_locations.length > 0) {

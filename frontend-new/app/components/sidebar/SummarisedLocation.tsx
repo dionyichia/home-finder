@@ -1,6 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { 
+  MagnifyingGlassIcon, 
+  BuildingStorefrontIcon, 
+  AcademicCapIcon, 
+  TruckIcon, 
+  ShieldCheckIcon, 
+  CurrencyDollarIcon, 
+  StarIcon
+} from '@heroicons/react/24/outline';
 import { useMap } from '~/contexts/MapContext';
 import { useRefocusMap } from '~/hooks/useRefocusMap';
 
@@ -12,6 +20,7 @@ interface SummarisedLocationProps {
     num_transport: number;
     num_malls: number;
     num_schools: number;
+    category_scores?: Record<string, number>;
     [key: string]: any;
   };
   score: number;
@@ -29,26 +38,16 @@ export default function SummarisedLocation({
   const { selectedLocationCallback } = useMap();
   const { refocusByLocationName } = useRefocusMap(selectedLocationCallback);
 
-  const formattedScore = score.toFixed(2);
-
-  const getCategoryIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'price': return '💰';
-      case 'crime_rate': return '🛡️';
-      case 'num_transport': return '🚆';
-      case 'num_malls': return '🛒';
-      case 'num_schools': return '🏫';
-      default: return '⭐';
-    }
+  // Format price to include commas
+  const formatPrice = (price: number) => {
+    return price.toLocaleString();
   };
-
-  const getCategoryValue = (category: string) => {
-    if (category.toLowerCase() === 'price') {
-      return `$${locationData.price.toLocaleString()}`;
-    }
-    return locationData[category] !== undefined
-      ? locationData[category].toString()
-      : 'N/A';
+  
+  // Calculate crime safety as an inverse of crime rate (lower crime rate is better)
+  const getCrimeSafetyRating = () => {
+    // Assuming crime rate of 200 is low and 500 is high
+    const crimeSafety = Math.max(0, Math.min(10, 10 - ((locationData.crime_rate - 200) / 30)));
+    return crimeSafety.toFixed(1);
   };
 
   const handleViewDetails = () => {
@@ -78,25 +77,65 @@ export default function SummarisedLocation({
       </div>
 
       {/* Title Row */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex justify-between items-start mb-2">
         <h3 className="text-md font-semibold text-gray-800 truncate">
           {locationData.location_name}
         </h3>
-        <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-          ⭐ {formattedScore}
-        </span>
+        {activeCategory === 'score' ? (
+          <div className="bg-blue-600 text-white text-sm font-medium py-1 px-2 rounded-full flex items-center gap-1">
+            <StarIcon className="w-4 h-4" />
+            {score.toFixed(1)}/10
+          </div>
+        ) : (
+          <div className="bg-green-600 text-white text-sm font-medium py-1 px-2 rounded-full flex items-center gap-1">
+            <CurrencyDollarIcon className="w-4 h-4" />
+            ${formatPrice(locationData.price)}
+          </div>
+        )}
       </div>
-
+      
       {/* Info Grid */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700">
-        <div>
-          <span className="inline-flex items-center gap-1">
-            <span>{getCategoryIcon(activeCategory)}</span>
-            <span className="font-medium">{activeCategory}:</span>
-          </span>{' '}
-          {getCategoryValue(activeCategory)}
+      <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="flex items-center text-gray-600">
+          <BuildingStorefrontIcon className="w-4 h-4 mr-2 text-purple-500" />
+          <span className="text-sm">{locationData.num_malls} {locationData.num_malls === 1 ? 'Mall' : 'Malls'}</span>
+        </div>
+        
+        <div className="flex items-center text-gray-600">
+          <AcademicCapIcon className="w-4 h-4 mr-2 text-blue-500" />
+          <span className="text-sm">{locationData.num_schools} Schools</span>
+        </div>
+        
+        <div className="flex items-center text-gray-600">
+          <TruckIcon className="w-4 h-4 mr-2 text-green-500" />
+          <span className="text-sm">{locationData.num_transport} MRTs </span>
+        </div>
+        
+        <div className="flex items-center text-gray-600">
+          <ShieldCheckIcon className="w-4 h-4 mr-2 text-red-500" />
+          <span className="text-sm">Safety: {getCrimeSafetyRating()}/10</span>
         </div>
       </div>
+      
+      {/* Show category scores only when sorting by score */}
+      {activeCategory === 'score' && locationData.category_scores && (
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <h4 className="text-xs font-medium text-gray-500 mb-2">CATEGORY SCORES</h4>
+          <div className="grid grid-cols-5 gap-1">
+            {Object.entries(locationData.category_scores).map(([category, value]) => (
+              <div key={category} className="flex flex-col items-center">
+                <span className="text-xs text-gray-500 capitalize">
+                  {category === 'crime_rate' ? 'Safety' : 
+                   category === 'malls' ? 'Malls' : 
+                   category === 'transport' ? 'Transit' : 
+                   category === 'price' ? 'Value' : category}
+                </span>
+                <span className="text-sm font-semibold">{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CTA Button */}
       <button
