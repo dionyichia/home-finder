@@ -37,17 +37,12 @@ def get_all_locations():
         return jsonify({"message": "Unknown sorting category!"}), 400
     
     if sorting_category == 'score':
-        print('here 1')
         user_id = request.args.get('user_id', default=None)
 
-        print('here 2, ', user_id)
         if not user_id:
             return jsonify({"message": "Missing required user_id"}), 400
         
-        print('here 3, ')
     ranked_locations = Locations.LocationsController.sort_by_category(sorting_category=sorting_category, user_id=user_id)
-
-    print('here 4, ', ranked_locations)
     
     # Return list of ranked locations
     return jsonify(ranked_locations)
