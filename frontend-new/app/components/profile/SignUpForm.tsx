@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { api } from "~/api";
 import type { UserRegistrationData } from "~/api";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 interface SignUpFormProps {
   onToggleForm: () => void;
@@ -21,7 +20,7 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
   // Preference options for ranking
   const [preferences, setPreferences] = useState<PreferenceOption[]>([
     { id: "price", label: "Price" },
-    { id: "crime_rate", label: "Crime Rate" },
+    { id: "crime_rate", label: "Crime" },
     { id: "schools", label: "Schools" },
     { id: "malls", label: "Malls" },
     { id: "transport", label: "Transport" },
@@ -43,9 +42,18 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
   // Password validation state
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  
+  // Password confirmation state
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [passwordsMatch, setPasswordsMatch] = useState(false);
+  const [passwordMatchError, setPasswordMatchError] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Custom drag state
+  const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const [draggedOverItem, setDraggedOverItem] = useState<number | null>(null);
 
   // Update importance_rank whenever preferences order changes
   useEffect(() => {
@@ -59,7 +67,8 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
   const isStep1Valid =
     formData.username.trim() !== "" &&
     formData.user_email.trim() !== "" &&
-    passwordValid;
+    passwordValid &&
+    passwordsMatch;
 
   // Validate fields for step 2 (additional preferences)
   const isStep2Valid = true; // All sliders have default values now
@@ -77,12 +86,36 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
         setPasswordValid(true);
         setPasswordError("");
       }
+      
+      // Check if passwords match
+      if (passwordConfirmation && value !== passwordConfirmation) {
+        setPasswordsMatch(false);
+        setPasswordMatchError("Passwords do not match");
+      } else if (passwordConfirmation) {
+        setPasswordsMatch(true);
+        setPasswordMatchError("");
+      }
     }
     
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    // Password confirmation validation
+    if (name === "passwordConfirmation") {
+      setPasswordConfirmation(value);
+      if (value !== formData.password) {
+        setPasswordsMatch(false);
+        setPasswordMatchError("Passwords do not match");
+      } else {
+        setPasswordsMatch(true);
+        setPasswordMatchError("");
+      }
+    }
+    
+    // Update form data for other fields
+    if (name !== "passwordConfirmation") {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   // Handle slider changes
@@ -94,15 +127,39 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
     });
   };
 
-  // Handle drag and drop for preference ranking
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  // Custom drag handlers
+  const handleDragStart = (index: number) => {
+    setDraggedItem(index);
+  };
 
-    const items = Array.from(preferences);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    setDraggedOverItem(index);
+  };
 
-    setPreferences(items);
+  const handleDragEnd = () => {
+    // Order not changed
+    if (draggedItem === null || draggedOverItem === null || draggedItem === draggedOverItem) {
+      setDraggedItem(null);
+      setDraggedOverItem(null);
+      return;
+    }
+
+    // Create new preferences array and reorder
+    const newPreferences = [...preferences];
+    const draggedItemContent = newPreferences[draggedItem];
+    
+    // Remove the dragged item
+    newPreferences.splice(draggedItem, 1);
+    // Insert at new position
+    newPreferences.splice(draggedOverItem, 0, draggedItemContent);
+    
+    // Update state
+    setPreferences(newPreferences);
+    
+    // Reset drag states
+    setDraggedItem(null);
+    setDraggedOverItem(null);
   };
 
   // Step 1 submission: Check if user exists and move to step 2 if not
@@ -234,6 +291,29 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             />
             {passwordError && (
               <p className="mt-1 text-xs text-red-500">{passwordError}</p>
+            )}
+          </div>
+          
+          {/* Password Confirmation Field */}
+          <div>
+            <label
+              htmlFor="passwordConfirmation"
+              className="block text-lg font-bold text-gray-700"
+            >
+              Confirm Password
+            </label>
+            <input
+              id="passwordConfirmation"
+              name="passwordConfirmation"
+              type="password"
+              value={passwordConfirmation}
+              onChange={handleChange}
+              className={`mt-1 block w-full border ${passwordMatchError ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm p-3 focus:ring-purple-300 focus:border-purple-300 bg-white`}
+              placeholder="Confirm your password"
+              required
+            />
+            {passwordMatchError && (
+              <p className="mt-1 text-xs text-red-500">{passwordMatchError}</p>
             )}
           </div>
           
@@ -397,43 +477,31 @@ export default function SignUpForm({ onToggleForm, onSignupSuccess }: SignUpForm
             </div>
           </div>
           
-          {/* Importance Ranking with Drag and Drop */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rank in terms of Importance
-            </label>
-            <p className="text-xs text-gray-500 mb-3">
-              Drag and drop to reorder. Most important on the left.
-            </p>
+          {/* Importance Ranking with Custom Drag and Drop */}
+          <div className="w-full overflow-x-auto">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span className="text-sm font-medium">Rank in terms of Importance</span>
+              <span className="text-xs text-gray-500">Drag and drop to reorder. Most important on the left.</span>
+            </div>
             
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="preferences" direction="horizontal">
-                {(provided) => (
-                  <div
-                    className="flex space-x-2 bg-blue-50 p-4 rounded-lg"
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {preferences.map((pref, index) => (
-                      <Draggable key={pref.id} draggableId={pref.id} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className="flex-1 bg-white border border-purple-200 p-2 rounded-md text-center text-sm font-medium shadow-sm cursor-move hover:bg-purple-50 transition-colors"
-                          >
-                            <div className="text-gray-600">{pref.label}</div>
-                            <div className="text-xs text-purple-500 mt-1">#{index + 1}</div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+            <div className="flex flex-row flex-nowrap justify-center gap-2 pb-2">
+              {preferences.map((pref, index) => (
+                <div
+                  key={pref.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`bg-white border ${draggedOverItem === index ? 'border-purple-500' : 'border-purple-200'}
+                    p-2 rounded-md text-center text-xs font-medium shadow-sm cursor-move
+                    hover:bg-purple-50 transition-colors flex flex-col items-center justify-center
+                    min-w-[60px] max-w-[80px] flex-shrink-0`}
+                >
+                  <span className="truncate w-full">{pref.label}</span>
+                  <span className="text-purple-500">#{index + 1}</span>
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="flex space-x-3 pt-4">
