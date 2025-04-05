@@ -9,6 +9,10 @@ interface LocationState {
 }
 
 const Compare = () => {
+  const [inputLocations, setInputLocations] = useState<string[]>(["", ""]);
+  // Optional flags to show error UI per location
+const [locationError, setLocationError] = useState<boolean[]>([false, false]);
+
   const [ activeLocations, setActiveLocations ] = useState(['', ''])
   const [triggerCompare, setTriggerCompare] = useState(false);
   
@@ -18,6 +22,7 @@ const Compare = () => {
   const scrollRefA = useRef<HTMLDivElement>(null);
   const scrollRefB = useRef<HTMLDivElement>(null);
   const isSyncingScroll = useRef(false);
+
 
 
   // Save active locations to session storage when it changes
@@ -121,8 +126,38 @@ const Compare = () => {
     }, 10);
   };
 
-  const shouldShowScrollTip = triggerCompare && activeLocations[0] && activeLocations[1];
-  const shouldShowMainTip = !(activeLocations[0] && activeLocations[1] && triggerCompare);
+const formatLocationName = (location: string): string => {
+
+
+  return location
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const handleCompare = () => {
+  const formattedA = formatLocationName(inputLocations[0]);
+  const formattedB = formatLocationName(inputLocations[1]);
+  setActiveLocations([formattedA, formattedB]);
+  setTriggerCompare(true);
+};
+
+// Automatically compare when both inputs are filled
+useEffect(() => {
+  console.log("comparing", inputLocations)
+
+  const timer = setTimeout(() => {
+    if (inputLocations[0] || inputLocations[1]) {
+      console.log("comparing1", inputLocations)
+      handleCompare();
+    }
+  }, 300); // debounce for smoother UX
+
+  return () => clearTimeout(timer);
+}, [inputLocations, setInputLocations]);
+
+const shouldShowScrollTip = triggerCompare && activeLocations[0] && activeLocations[1];
+const shouldShowMainTip = !(activeLocations[0] && activeLocations[1] && triggerCompare);
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-start pl-20 p-6 bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-[#FFFFFF] text-black overflow-hidden">
@@ -136,23 +171,21 @@ const Compare = () => {
         <input
           type="text"
           placeholder="Enter Location A"
-          value={activeLocations[0]}
-          onChange={(e) => setActiveLocations([e.target.value, activeLocations[1]])}
+          value={inputLocations[0]}
+          onChange={(e) =>
+            setInputLocations([e.target.value, inputLocations[1]])
+          }
           className="border rounded px-4 py-2 w-full md:w-[300px] text-black"
         />
         <input
           type="text"
           placeholder="Enter Location B"
-          value={activeLocations[1]}
-          onChange={(e) => setActiveLocations([activeLocations[0], e.target.value])}
+          value={inputLocations[1]}
+          onChange={(e) =>
+            setInputLocations([inputLocations[0], e.target.value])
+          }
           className="border rounded px-4 py-2 w-full md:w-[300px] text-black"
         />
-        <button
-          onClick={() => setTriggerCompare(true)}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        >
-          Compare
-        </button>
       </div>
 
       {/* Tips */}
