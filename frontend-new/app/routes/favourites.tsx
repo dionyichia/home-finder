@@ -1,450 +1,279 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MagnifyingGlassIcon, MapPinIcon, XMarkIcon, HeartIcon } from "@heroicons/react/24/outline";
-import { HeartIcon as SolidHeartIcon } from "@heroicons/react/24/solid";
+import React, { useState, useEffect } from 'react';
+import { HeartIcon, BellIcon, BellSlashIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as SolidHeartIcon, BellIcon as SolidBellIcon } from "@heroicons/react/24/solid";
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import ViewLocation from "../components/ViewLocation";
 import CollapsibleNavBar from '~/components/NavBar';
 
-// Location geodata interface
-interface LocationGeoData {
-  location_name: string;
-  lat?: number;
-  lon?: number;
-  // Alternative structure based on fetch_districts.get_location_geodata
-  geodata?: {
-    lat: number;
-    lon: number;
-  };
-}
-
-// Price history structure
-interface ResalePrice {
-  date: string;
-  price: number;
-  flat_type?: string;
-  area_sqm?: number;
-}
-
-// Crime data structure
-interface Crime {
-  id: number;
-  title: string;
-  description: string;
-  date: string;
-}
-
-// School data structure
-interface School {
-  name: string;
-  distance?: number;
-  level?: string;
-}
-
-// Mall data structure
-interface Mall {
-  name: string;
-  distance?: number;
-}
-
-// Transport station data structure
-interface TransportStation {
-  name: string;
-  type: string; // MRT, LRT, Bus, etc.
-  distance?: number;
-}
-
-// Full location details interface
-interface LocationDetails {
-  location_name: string;
-  price: ResalePrice[];
-  crime: Crime[];
-  crime_rate: number;
-  schools: School[];
-  malls: Mall[];
-  transport: TransportStation[];
-  score?: number;
-}
-
-// Combined interface for frontend display
+// Location interface
 interface Location {
   location_name: string;
-  coordinates?: {
-    lat: number;
-    lon: number;
-  };
   crime_rate?: number;
-  price?: number; // This would be the average or latest price
+  price?: number;
   num_transport?: number;
   num_malls?: number;
   num_schools?: number;
+  has_notification?: boolean;
 }
 
-// Interface for favorites response
-interface FavoritesResponse {
-  favorites: Location[];
-  message?: string;
-}
-
-// Interface for API responses
-interface ApiResponse {
+// Notification interface
+interface Notification {
+  location_name: string;
   message: string;
-  status?: string;
-  data?: any;
+  created_at: string;
+  read: boolean;
 }
 
 // Interface for FavoritesPage props
 interface FavoritesPageProps {
-  userId: number; // Keep userId as a prop
+  userId: string;
 }
 
-const FavoritesPage: React.FC<FavoritesPageProps> = ({ userId }) => {
+const FavoritesPage: React.FC<FavoritesPageProps> = () => {
+  const navigate = useNavigate();
+  
   // State management
+  const [userId, setUserID] = useState<string>('');
   const [favorites, setFavorites] = useState<Location[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<any>(null);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [allLocations, setAllLocations] = useState<LocationGeoData[]>([]);
-  const [displayLocations, setDisplayLocations] = useState<LocationGeoData[]>([]);
 
-  const locationDetailsRef = useRef<HTMLDivElement>(null);
-
-  // Fetch initial data
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const userId = sessionStorage.getItem("user_id");
+    console.log("userId", userId)
+
+    if (!userId) {
+        console.log("User not logged in!")
+    } else {
+      setUserID(userId)
+    }
+  }, [])
+
+  // Fetch favorites and notifications
+  useEffect(() => {
+    const fetchUserData = async () => {
+
+      if (!userId) return;
+  
       setLoading(true);
       setError(null);
       
       try {
-        // Fetch all locations geodata
-        const locationsGeoData = await api.getAllLocationsGeodata();
-        setAllLocations(locationsGeoData);
-        setDisplayLocations(locationsGeoData);
-
-        // Fetch user favorites
-        if (userId) {
-          try {
-            const favoritesResponse = await api.getUserFavorites(userId);
-            const favoritesData = favoritesResponse.favorites;
-            
-            if (favoritesData && favoritesData.length > 0) {
-              // Transform favorites to include coordinates if available
-              const locationsWithCoordinates = favoritesData.map((fav: any) => {
-                // Find corresponding location in all locations to get coordinates
-                const locationDetails = locationsGeoData.find(
-                  (loc) => loc.location_name === fav.location_name
-                );
-
-                // Handle different possible coordinate structures
-                let coordinates; 
-                if (locationDetails?.geodata) {
-                  coordinates = locationDetails.geodata;
-                } else if (locationDetails?.lat && locationDetails?.lon) {
-                  coordinates = { lat: locationDetails.lat, lon: locationDetails.lon };
-                }
-
-                return {
-                  location_name: fav.location_name,
-                  coordinates: coordinates,
-                  crime_rate: fav.crime_rate,
-                  price: fav.price,
-                  num_transport: fav.num_transport,
-                  num_malls: fav.num_malls,
-                  num_schools: fav.num_schools
-                };
-              });
-
-              setFavorites(locationsWithCoordinates);
-            }
-          } catch (favError) {
-            console.error("Error fetching favorites:", favError);
-            // We'll continue even if favorites fail to load
-          }
+        // Fetch favorites with null check
+        const favoritesResponse = await api.getUserFavorites(userId);
+        console.log("favoritesResponse", favoritesResponse);
+      
+        // Return early if no favorites exist
+        if (!favoritesResponse?.favorites || favoritesResponse.favorites.length === 0) {
+          setFavorites([]);
+          setNotifications([]);
+          return;
         }
+      
+        // Fetch notifications with null check
+        const notificationsResponse = await api.getUserNotifications(userId);
+        const notifications = notificationsResponse?.notifications || [];
+        setNotifications(notifications);
+      
+        // Return early if no notifications exist
+        if (!notifications || notifications.length === 0) {
+          setFavorites(favoritesResponse.favorites.map((fav: Location) => ({
+            ...fav,
+            has_notification: false
+          })));
+          return;
+        }
+      
+        // Combine data to mark locations with notifications
+        const enhancedFavorites = favoritesResponse.favorites.map((fav: Location) => {
+          const hasNotification = notifications.some(
+            (notification: Notification) => 
+              notification?.location_name === fav.location_name && 
+              !notification.read
+          );
+          
+          return {
+            ...fav,
+            has_notification: hasNotification
+          };
+        });
+        
+        setFavorites(enhancedFavorites);
       } catch (err) {
-        console.error("Error fetching locations data:", err);
-        setError('Failed to fetch locations data');
+        console.error("Error fetching user data:", err);
+        setError('Failed to load your favorites');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchInitialData();
+    fetchUserData();
   }, [userId]);
 
-  // Search handler
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      // Reset to show all locations if search is empty
-      setDisplayLocations(allLocations);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Filter locations based on search term
-      const filteredLocations = allLocations.filter(location => 
-        location.location_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      // Sort locations by relevance (exact match first, then by prefix, then contains)
-      const sortedLocations = [...filteredLocations].sort((a, b) => {
-        const aName = a.location_name.toLowerCase();
-        const bName = b.location_name.toLowerCase();
-        const term = searchTerm.toLowerCase();
-        
-        // Exact match gets highest priority
-        if (aName === term && bName !== term) return -1;
-        if (bName === term && aName !== term) return 1;
-        
-        // Starts with gets second priority
-        if (aName.startsWith(term) && !bName.startsWith(term)) return -1;
-        if (bName.startsWith(term) && !aName.startsWith(term)) return 1;
-        
-        // Alphabetical order for the rest
-        return aName.localeCompare(bName);
-      });
-      
-      setDisplayLocations(sortedLocations);
-      
-      // Also try to search for specific location data
-      try {
-        const locationData = await api.searchLocation(searchTerm.trim());
-        if (locationData) {
-          setSearchResults(locationData);
-        }
-      } catch (searchErr) {
-        console.log("Specific location search failed, showing filtered list only");
+  // Navigate to compare page with selected location
+  const handleLocationSelect = (locationName: string) => {
+    navigate('/compare', {
+      state: {
+        locationToAdd: locationName,
+        shouldTriggerCompare: true
       }
-    } catch (err) {
-      console.error("Search error:", err);
-      setError("Failed to search locations");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add to favorites
-  const addToFavorites = async (locationName: string) => {
-    if (userId) {
-      try {
-        const response: ApiResponse = await api.addToFavorites(userId, locationName);
-        
-        if (response.message.includes("added to favorites")) {
-          // If not already in favorites, add it
-          if (!favorites.some(fav => fav.location_name === locationName)) {
-            // Get location details to add to favorites
-            let locationData = searchResults && searchResults.location_name === locationName 
-              ? searchResults 
-              : await api.searchLocation(locationName);
-            
-            const newFavorite: Location = {
-              location_name: locationName,
-              crime_rate: locationData?.crime_rate,
-              num_schools: locationData?.schools?.length,
-              num_malls: locationData?.malls?.length,
-              num_transport: locationData?.transport?.length
-            };
-            
-            setFavorites([...favorites, newFavorite]);
-          }
-        }
-      } catch (err) {
-        console.error("Error adding to favorites:", err);
-        setError("Failed to add to favorites");
-      }
-    }
+    });
   };
 
   // Remove from favorites
-  const removeFavorite = async (locationName: string) => {
+  const removeFavorite = async (e: React.MouseEvent, locationName: string) => {
+    e.stopPropagation();
     if (!userId) return;
     
     try {
-      const response: ApiResponse = await api.removeFromFavorites(userId, locationName);
-      
-      if (response.message.includes("removed from favorites")) {
-        setFavorites(favorites.filter(fav => fav.location_name !== locationName));
-      }
+      await api.removeFromFavorites(String(userId), locationName);
+      setFavorites(favorites.filter(fav => fav.location_name !== locationName));
     } catch (err) {
       console.error("Error removing favorite:", err);
       setError("Failed to remove from favorites");
     }
   };
 
-  // Handle location selection
-  const handleLocationSelect = async (locationName: string) => {
-    setLoading(true);
-    setError(null);
+  // Toggle notification status
+  const toggleNotification = async (e: React.MouseEvent, locationName: string, currentStatus: boolean) => {
+    e.stopPropagation();
+    if (!userId) return;
     
     try {
-      // Fetch full location details
-      const locationData = await api.searchLocation(locationName);
-      setSearchResults(locationData);
-      setSelectedLocation({
-        location_name: locationData.location_name,
-        crime_rate: locationData.crime_rate,
-        num_schools: locationData.schools?.length,
-        num_malls: locationData.malls?.length,
-        num_transport: locationData.transport?.length
-      });
-      
-      // Scroll to details on mobile
-      if (window.innerWidth < 1024 && locationDetailsRef.current) {
-        locationDetailsRef.current.scrollIntoView({ behavior: 'smooth' });
+      if (currentStatus) {
+        await api.disableNotification(userId, locationName);
+      } else {
+        await api.enableNotification(userId, locationName);
       }
+      
+      // Update the local state
+      setFavorites(favorites.map(fav => 
+        fav.location_name === locationName 
+          ? { ...fav, has_notification: !currentStatus }
+          : fav
+      ));
     } catch (err) {
-      console.error("Error fetching location details:", err);
-      setError("Failed to load location details");
-    } finally {
-      setLoading(false);
+      console.error("Error toggling notification:", err);
+      setError(`Failed to ${currentStatus ? 'disable' : 'enable'} notification`);
     }
   };
 
-  // Check if a location is a favorite
-  const isLocationFavorite = (locationName: string) => {
-    return favorites.some(fav => fav.location_name === locationName);
+  // Get notification count for a location
+  const getNotificationCount = (locationName: string) => {
+    return notifications.filter(
+      notification => notification.location_name === locationName && !notification.read
+    ).length;
   };
 
+  // Helper to render location stats
+  const renderLocationStats = (location: Location) => (
+    <div className="grid grid-cols-3 gap-2 text-sm text-gray-600 mt-1">
+      {location.crime_rate !== undefined && (
+        <div>Crime: <span className="font-medium">{location.crime_rate}%</span></div>
+      )}
+      {location.num_schools !== undefined && (
+        <div>Schools: <span className="font-medium">{location.num_schools}</span></div>
+      )}
+      {location.num_transport !== undefined && (
+        <div>Transport: <span className="font-medium">{location.num_transport}</span></div>
+      )}
+    </div>
+  );
+
   return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-white py-10 px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-white py-10 px-6">
+      <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">My Favorite Locations</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Left column - Search and Favorites List */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
-            <div className="mb-4 relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search For Location"
-                className="w-full border border-gray-300 rounded-md px-4 py-2 pr-10 bg-white/70 text-black placeholder-gray-500"
-              />
-              <button 
-                onClick={handleSearch} 
-                className="absolute right-3 top-2.5 text-gray-500"
-              >
-                <MagnifyingGlassIcon className="w-5 h-5" />
-              </button>
+        {/* Status messages */}
+        {loading && (
+          <div className="text-center py-4 text-gray-600">Loading your favorites...</div>
+        )}
+        
+        {error && (
+          <div className="text-center py-3 px-4 bg-red-100 text-red-700 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
+        
+        {/* Favorites list */}
+        <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
+          {favorites.length === 0 && !loading ? (
+            <div className="text-center p-10 bg-white/40 rounded-lg border border-white/20">
+              <p className="text-gray-700 font-medium">You haven't added any favorite locations yet</p>
+              <p className="text-sm text-gray-600 mt-2">
+                Search for locations and add them to your favorites to see them here
+              </p>
             </div>
-
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">Saved Locations</h2>
-            {loading && !searchResults ? (
-              <div className="text-center py-4 text-gray-600">Loading...</div>
-            ) : favorites.length === 0 ? (
-              <div className="text-center text-gray-600 p-4 bg-white/40 rounded-lg border border-white/20">
-                <p>No favorite locations</p>
-                <p className="text-sm mt-2">Search for locations to add them to your favorites</p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                {favorites.map((location) => (
+          ) : (
+            <div className="space-y-3">
+              {favorites.map((location) => {
+                const notificationCount = getNotificationCount(location.location_name);
+                const hasNotifications = notificationCount > 0;
+                
+                return (
                   <div 
                     key={location.location_name}
-                    className="flex justify-between items-center p-3 rounded-lg bg-white/60 backdrop-blur-md hover:bg-white/80 transition cursor-pointer"
                     onClick={() => handleLocationSelect(location.location_name)}
+                    className="relative flex items-center bg-white/60 hover:bg-white/80 p-4 rounded-xl 
+                      shadow-sm border border-white/30 transition-all cursor-pointer"
                   >
-                    <span className="font-medium text-gray-900">{location.location_name}</span>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFavorite(location.location_name);
-                      }}
-                      className="text-red-500 hover:text-red-700"
-                      aria-label="Remove from favorites"
-                    >
-                      <XMarkIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right column - All Locations List */}
-          <div ref={locationDetailsRef} className="lg:col-span-2">
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">All Locations</h2>
-
-              {loading && searchTerm ? (
-                <div className="text-center py-4 text-gray-600">Searching...</div>
-              ) : displayLocations.length === 0 ? (
-                <div className="text-center text-gray-600 p-4 bg-white/40 rounded-lg border border-white/20">
-                  <p>No locations found</p>
-                  <p className="text-sm mt-2">Try a different search term</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                  {displayLocations.map((location) => {
-                    const isFavorite = isLocationFavorite(location.location_name);
-                    const isSelected = searchResults?.location_name === location.location_name;
-                    
-                    return (
-                      <div 
-                        key={location.location_name}
-                        className={`flex justify-between items-center p-4 rounded-lg transition border
-                          ${isSelected 
-                            ? 'bg-blue-100/60 border-blue-500' 
-                            : 'bg-white/60 hover:bg-white/80 border-white/20 backdrop-blur-md'
-                          }`}
-                        onClick={() => handleLocationSelect(location.location_name)}
-                      >
-                        <div className="flex-1">
-                          <span className="font-medium text-gray-900">{location.location_name}</span>
-                          {isSelected && searchResults && (
-                            <div className="mt-2 text-sm text-gray-700 grid grid-cols-3 gap-2">
-                              <div><strong>Crime:</strong> {searchResults.crime_rate}%</div>
-                              <div><strong>Schools:</strong> {searchResults.schools?.length || 0}</div>
-                              <div><strong>Transport:</strong> {searchResults.transport?.length || 0}</div>
-                            </div>
-                          )}
-                        </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            isFavorite 
-                              ? removeFavorite(location.location_name)
-                              : addToFavorites(location.location_name);
-                          }}
-                          className={`flex items-center gap-1 px-3 py-1 rounded-md transition font-medium
-                            ${isFavorite 
-                              ? 'text-yellow-700 bg-yellow-100 hover:bg-red-100 hover:text-red-600' 
-                              : 'text-gray-700 bg-white/70 hover:bg-yellow-100 hover:text-yellow-600'
-                            }`}
-                        >
-                          {isFavorite ? (
-  <SolidHeartIcon className="w-5 h-5 text-pink-500" />
-) : (
-  <HeartIcon className="w-5 h-5 text-gray-600 hover:text-pink-500 transition" />
-)}
-                          <span className="hidden sm:inline">{isFavorite ? "Favorited" : "Favorite"}</span>
-                        </button>
+                    {/* Location information */}
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <h3 className="font-semibold text-gray-900">{location.location_name}</h3>
+                        
+                        {/* Notification indicator */}
+                        {hasNotifications && (
+                          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-600 rounded-full">
+                            {notificationCount} new
+                          </span>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* View Section */}
-              {searchResults && (
-                <div className="mt-6 bg-white/70 rounded-xl shadow-lg p-6 border border-white/30">
-                  <h3 className="text-2xl font-semibold mb-4 text-gray-800">{searchResults.location_name} Details</h3>
-                  <ViewLocation locationName={searchResults.location_name} />
-                </div>
-              )}
-
+                      
+                      {/* Location stats */}
+                      {renderLocationStats(location)}
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2">
+                      {/* Notification toggle button */}
+                      <button
+                        onClick={(e) => toggleNotification(e, location.location_name, Boolean(location.has_notification))}
+                        className={`p-2 rounded-full transition-colors ${
+                          location.has_notification
+                            ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                        aria-label={location.has_notification ? "Disable notifications" : "Enable notifications"}
+                      >
+                        {location.has_notification ? (
+                          <SolidBellIcon className="w-5 h-5" />
+                        ) : (
+                          <BellIcon className="w-5 h-5" />
+                        )}
+                      </button>
+                      
+                      {/* Remove from favorites button */}
+                      <button
+                        onClick={(e) => removeFavorite(e, location.location_name)}
+                        className="p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-full transition-colors"
+                        aria-label="Remove from favorites"
+                      >
+                        <SolidHeartIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
       </div>
-      {/* Integrated NavBar */}
-      <CollapsibleNavBar locations={[]} activeCategory={''}/>
+      
+      {/* Navigation bar */}
+      <CollapsibleNavBar locations={[]} activeCategory={''} />
     </div>
   );
 };

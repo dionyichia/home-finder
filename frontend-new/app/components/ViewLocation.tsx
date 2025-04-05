@@ -1,7 +1,4 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api";
 import CrimeCard from './view_location/CrimeCard'
@@ -70,16 +67,24 @@ const FLAT_COLORS: Record<string, string> = {
 };
 
 const ViewLocation = ({ locationName: propName }: { locationName?: string }) => {
+  const [userId, setUserID] = useState<string>('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [locationData, setLocationData] = useState<LocationDataResponse | null>(null);
   const [processedData, setProcessedData] = useState<any>(null);
   const { locationName: paramName } = useParams();
   const locationName = propName || paramName;
+  const firstRender = useRef(true);
 
-  // //What the fuck rand???
-  // const calculateDistance = (lat: string | number, lng: string | number) => {
-  //   return (Math.random() * 2.9 + 0.1).toFixed(1);
-  // };
+  useEffect(() => {
+      const userId = sessionStorage.getItem("user_id");
+      console.log("userId", userId)
+  
+      if (!userId) {
+          console.log("User not logged in!")
+      } else {
+        setUserID(userId)
+      }
+    }, [])
 
   const formatCurrency = (value: number) => `S$${value.toLocaleString()}`;
 
@@ -204,17 +209,78 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
     const fetchLocation = async () => {
       try {
         if (!locationName) return;
+        
+        // Fetch location data
         const data = await api.searchLocation(locationName);
-        console.log("pulled loc data from backend: ", data)
+        console.log("pulled loc data from backend: ", data);
+        
+        // Process and set location data
+        const processed = processLocationData(data);
         setLocationData(data);
-        setProcessedData(processLocationData(data));
+        setProcessedData(processed);
+  
+        // Check favorites if user is logged in
+        const userId = sessionStorage.getItem("user_id");
+        if (!userId) {
+          console.log("User not logged in, no favourites");
+          setIsFavorite(false);
+          return;
+        }
+  
+        // Fetch and check favorites
+        const userFavorites: any[] = await api.getUserFavorites(userId);
+        console.log('user favorites:', userFavorites);
+
+        const favorites: any[] = userFavorites.favorites;
+        console.log('favorites, ', favorites, 'favorites.length ', favorites.length)
+
+        let isFavorited = false;
+
+        if (processed && processed.name) {
+          // Use a normal loop instead of .some
+          for (let key in favorites) {
+            console.log('favorites[key].location_name', favorites[key].location_name)
+            if (favorites[key].location_name === processed.name) {
+              isFavorited = true;
+              break; // Exit loop once the location is found
+            }
+          }
+        }
+
+        console.log("isFavorited ", isFavorited, " processed.name ", processed.name)
+
+        setIsFavorite(isFavorited);
+        
       } catch (error) {
         console.error("Error fetching location details:", error);
+        // Consider setting error state here if you want to display it in UI
       }
     };
-
+  
     fetchLocation();
   }, [locationName]);
+
+  const handleFavoriteToggle = async () => {
+    if (!userId) {
+      console.log("User not logged in!");
+      setIsFavorite(false);
+      return;
+    }
+
+    // Toggle the favorite state
+    setIsFavorite(prev => !prev);
+
+    if (isFavorite) {
+      // If it's already a favorite, remove it
+      const message = await api.removeFromFavorites(userId, processedData.name);
+      console.log("Removed from Favourites!", message);
+    } else {
+      // If it's not a favorite, add it
+      const message = await api.addToFavorites(userId, processedData.name);
+      console.log("Added to Favourites!", message);
+    }
+  };
+
 
   if (!processedData) return <p>Loading...</p>;
 
@@ -234,14 +300,29 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">{processedData.name}</h1>
             <button
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="p-1 rounded-full border border-gray-300 hover:bg-gray-100 transition-transform duration-150 active:scale-110"
+              onClick={handleFavoriteToggle}
+              className={`
+                flex items-center gap-1
+                p-1.5
+                rounded-full
+                border ${isFavorite ? "border-red-200" : "border-gray-300"}
+                ${isFavorite ? "bg-red-50" : "bg-white"}
+                text-xs font-medium
+                transition-all duration-150 ease-in-out
+                hover:shadow-xs
+                active:scale-95
+              `}
             >
               <HeartIcon
-                className={`w-5 h-5 transition-all duration-300 ease-in-out ${
-                  isFavorite ? "text-red-500 scale-110" : "text-gray-400"
-                }`}
+                className={`
+                  w-4 h-4
+                  transition-all duration-200 ease-in-out
+                  ${isFavorite ? "text-red-500 fill-red-500" : "text-gray-500 fill-transparent stroke-2"}
+                `}
               />
+              <span className="px-1">
+                {isFavorite ? "Saved" : "Save"}
+              </span>
             </button>
           </div>
           <p className="text-lg font-semibold">

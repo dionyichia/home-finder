@@ -30,13 +30,13 @@ const Compare = () => {
           console.error("Error saving activeComparedLocations:", e);
         }
       }
-      if (activeLocations[0]) {
+      else if (activeLocations[0]) {
         sessionStorage.setItem("activeComparedLocations", JSON.stringify([activeLocations[0], '']));
       } else {
         sessionStorage.setItem("activeComparedLocations", JSON.stringify([activeLocations[1], '']));
       }
     }
-  }, [activeLocations]);
+  }, [activeLocations, setActiveLocations, triggerCompare]);
 
   const loadFromSessionStorage = () => {
     console.log("Trying to load from session storage")
@@ -84,12 +84,15 @@ const Compare = () => {
           setActiveLocations([state.locationToAdd, locationB])
         } 
         // If locationA is empty, fill it
-        else if (!locationA) {
+        else if (!locationA && locationB) {
           setActiveLocations([state.locationToAdd, locationB])
         } 
         // If locationA is filled but locationB is empty, fill locationB
-        else {
+        else if (locationA && !locationB) {
           setActiveLocations([locationA, state.locationToAdd])
+        }
+        else {
+          setActiveLocations([state.locationToAdd, ""])
         }
 
         // console.log("activeLocations", activeLocations)

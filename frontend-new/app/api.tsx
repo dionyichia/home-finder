@@ -236,7 +236,7 @@ export const api = {
   /**
    * Get user favorites
    */
-  getUserFavorites: async (userId: number): Promise<{ favorites: any[] }> => {
+  getUserFavorites: async (userId: string): Promise<{ favorites: any[] }> => {
     const response = await fetch(`${API_BASE_URL}/get_user_favourites?user_id=${userId}`);
     
     if (!response.ok) {
@@ -250,7 +250,7 @@ export const api = {
   /**
    * Add a location to favorites
    */
-  addToFavorites: async (userId: number, locationName: string): Promise<{ message: string }> => {
+  addToFavorites: async (userId: string, locationName: string): Promise<{ message: string }> => {
     const response = await fetch(`${API_BASE_URL}/add_to_favourites`, {
       method: 'POST',
       headers: {
@@ -273,7 +273,7 @@ export const api = {
   /**
    * Remove a location from favorites
    */
-  removeFromFavorites: async (userId: number, locationName: string): Promise<{ message: string }> => {
+  removeFromFavorites: async (userId: string, locationName: string): Promise<{ message: string }> => {
     const response = await fetch(`${API_BASE_URL}/remove_from_favourites`, {
       method: 'POST',
       headers: {
@@ -296,7 +296,7 @@ export const api = {
   /**
    * Enable notifications for a location
    */
-  enableNotification: async (userId: number, locationName: string): Promise<{ message: string }> => {
+  enableNotification: async (userId: string, locationName: string): Promise<{ message: string }> => {
     const response = await fetch(`${API_BASE_URL}/enable_notification`, {
       method: 'POST',
       headers: {
@@ -319,7 +319,7 @@ export const api = {
   /**
    * Disable notifications for a location
    */
-  disableNotification: async (userId: number, locationName: string): Promise<{ message: string }> => {
+  disableNotification: async (userId: string, locationName: string): Promise<{ message: string }> => {
     const response = await fetch(`${API_BASE_URL}/disable_notification`, {
       method: 'POST',
       headers: {
@@ -342,7 +342,7 @@ export const api = {
   /**
    * Get user notifications
    */
-  getUserNotifications: async (userId: number): Promise<{ notifications: any[] }> => {
+  getUserNotifications: async (userId: string): Promise<{ notifications: any[] }> => {
     const response = await fetch(`${API_BASE_URL}/get_user_notifications?user_id=${userId}`);
     
     if (!response.ok) {

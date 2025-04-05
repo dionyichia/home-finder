@@ -295,15 +295,17 @@ def disable_notification():
 @app.route('/get_user_notifications', methods=['GET'])
 def get_user_notifications():
     user_id = request.args.get('user_id')
+    print(user_id)
     if not user_id:
         return jsonify({"message": "User ID is required!"}), 400
     
     notifications = Notifications.NotificationsController.get_user_notifications(user_id)
+    print(notifications)
     
     if notifications:
         return jsonify({"notifications": notifications}), 200
     else:
-        return jsonify({"message": "No enabled notifications found!"}), 404
+        return jsonify({"message": "No enabled notifications found!"}), 200
 
 @app.route('/send_notifications', methods=['POST'])
 def send_notifications():
