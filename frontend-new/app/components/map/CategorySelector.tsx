@@ -14,7 +14,7 @@ const categories = [
   { name: "Schools", icon: <AcademicCapIcon className="w-5 h-5" />, query: "num_schools" },
   { name: "Public Transport", icon: <TruckIcon className="w-5 h-5" />, query: "num_transport" },
   { name: "Shopping Malls", icon: <ShoppingBagIcon className="w-5 h-5" />, query: "num_malls" },
-  { name: "Districts", icon: <MapIcon className="w-5 h-5" />, query: "score" },
+  { name: "For You", icon: <MapIcon className="w-5 h-5" />, query: "score" },
 ];
 
 const CategorySelector = ({ onCategoryChange, activeCategory }) => {
