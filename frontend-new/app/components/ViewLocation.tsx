@@ -71,6 +71,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
   const [isFavorite, setIsFavorite] = useState(false);
   const [locationData, setLocationData] = useState<LocationDataResponse | null>(null);
   const [processedData, setProcessedData] = useState<any>(null);
+  const [showWarning, setShowWarning] = useState(false);
   const { locationName: paramName } = useParams();
   const locationName = propName || paramName;
   const firstRender = useRef(true);
@@ -263,7 +264,9 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
   const handleFavoriteToggle = async () => {
     if (!userId) {
       console.log("User not logged in!");
-      setIsFavorite(false);
+      setShowWarning(true);
+      // Hide warning after 3 seconds
+      setTimeout(() => setShowWarning(false), 3000);
       return;
     }
 
@@ -286,6 +289,11 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
 
   return (
     <div className="w-full max-w-[700px] p-6 pb-20 bg-white/60 backdrop-blur-md rounded-2xl shadow-md mx-auto text-black border border-gray-200">
+      {showWarning && (
+        <div className="mb-4 p-3 bg-yellow-100/80 border border-yellow-200 text-yellow-600 text-sm rounded-lg">
+          Please log in to save locations to your favorites
+        </div>
+      )}
       {!propName && (
         <div className="flex items-center space-x-2 mb-4">
           <Link to="/" className="p-2 bg-gray-200 rounded-full">

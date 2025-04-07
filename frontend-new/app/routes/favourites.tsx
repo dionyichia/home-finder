@@ -167,19 +167,31 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
   };
 
   // Helper to render location stats
-  const renderLocationStats = (location: Location) => (
-    <div className="grid grid-cols-3 gap-2 text-sm text-gray-600 mt-1">
-      {location.crime_rate !== undefined && (
-        <div>Crime: <span className="font-medium">{location.crime_rate}%</span></div>
-      )}
-      {location.num_schools !== undefined && (
-        <div>Schools: <span className="font-medium">{location.num_schools}</span></div>
-      )}
-      {location.num_transport !== undefined && (
-        <div>Transport: <span className="font-medium">{location.num_transport}</span></div>
-      )}
-    </div>
-  );
+  const renderLocationStats = (location: Location) => {
+    const getCrimeLevelColor = (safetyScore: number) => {
+      if (safetyScore >= 8) return "text-green-600";
+      if (safetyScore >= 6) return "text-yellow-600";
+      if (safetyScore >= 4) return "text-orange-600";
+      return "text-red-600";
+    };
+
+    const safetyScore = location.crime_rate || 0;
+    const safetyColor = getCrimeLevelColor(safetyScore);
+
+    return (
+      <div className="grid grid-cols-3 gap-2 text-sm text-gray-600 mt-1">
+        {location.crime_rate !== undefined && (
+          <div>Safety: <span className={`font-medium ${safetyColor}`}>{safetyScore.toFixed(1)}/10</span></div>
+        )}
+        {location.num_schools !== undefined && (
+          <div>Schools: <span className="font-medium">{location.num_schools}</span></div>
+        )}
+        {location.num_transport !== undefined && (
+          <div>Transport: <span className="font-medium">{location.num_transport}</span></div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#E0C3FC] via-[#8EC5FC] to-white py-10 px-6">
