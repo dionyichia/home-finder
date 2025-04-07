@@ -36,6 +36,15 @@ class FavoritesController:
             ''', (user_id,))
             
             result = [dict(row) for row in cursor.fetchall()]
+            
+            # Convert crime rate to safety score
+            for location in result:
+                if location.get('crime_rate') is not None:
+                    crime_rate = location['crime_rate']
+                    # Calculate safety score (10 = very safe, 0 = least safe)
+                    safety_score = max(0, min(10, 10 - ((crime_rate - 200) / 30)))
+                    location['crime_rate'] = round(safety_score, 1)
+            
             return result
         except sqlite3.Error as e:
             print(f"Database error: {e}")
