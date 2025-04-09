@@ -6,6 +6,7 @@ import { api } from '../api';
 import CollapsibleNavBar from '~/components/NavBar';
 
 // Location interface
+// Location interface
 interface Location {
   location_name: string;
   crime_rate?: number;
@@ -13,7 +14,8 @@ interface Location {
   num_transport?: number;
   num_malls?: number;
   num_schools?: number;
-  has_notification?: boolean;
+  has_notification?: boolean; // Whether notifications are enabled
+  has_unsent_notifications?: boolean; // Whether there are unsent notifications for this location
 }
 
 // Notification interface
@@ -51,11 +53,12 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
   }, [])
 
   // Fetch favorites and notifications
-  useEffect(() => {
-    const fetchUserData = async () => {
+  // First fix - Update your useEffect that fetches data
 
+useEffect(() => {
+    const fetchUserData = async () => {
       if (!userId) return;
-  
+
       setLoading(true);
       setError(null);
       
@@ -68,34 +71,51 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
         if (!favoritesResponse?.favorites || favoritesResponse.favorites.length === 0) {
           setFavorites([]);
           setNotifications([]);
+          setLoading(false);
           return;
         }
       
-        // Fetch notifications with null check
-        const notificationsResponse = await api.getUserNotifications(userId);
-        const notifications = notificationsResponse?.notifications || [];
-        setNotifications(notifications);
+        // Fetch locations where notifications are enabled
+        const notificationsEnabledResponse = await api.getUserNotificationsEnabledLocation(userId);
+        const notificationsEnabled = notificationsEnabledResponse?.notifications || [];
+        console.log("notificationsEnabled ", notificationsEnabled)
       
-        // Return early if no notifications exist
-        if (!notifications || notifications.length === 0) {
-          setFavorites(favoritesResponse.favorites.map((fav: Location) => ({
-            ...fav,
-            has_notification: false
-          })));
-          return;
-        }
-      
+        // Fetch unsent notifications for this user
+        const unsentNotificationsResponse = await api.getUserNotifications(userId);
+        const unsentNotifications = unsentNotificationsResponse?.notifications || [];
+        console.log("unsentNotifications ", unsentNotifications)
+
+        // Update notifications state first
+        const allNotifications = unsentNotifications.map((notification) => ({
+          ...notification,
+          read: false // Mark all unsent notifications as unread
+        }));
+        
+        setNotifications(allNotifications);
+        console.log("Set notifications, ", allNotifications);
+        
+        // Important fix: map location names from notificationsEnabled to a simple array for easier comparison
+        const enabledLocationNames = notificationsEnabled.map(notification => 
+          notification.location_name
+        );
+        
+        // Create a set of location names with unsent notifications for efficient lookup
+        const locationsWithUnsentNotifications = new Set(
+          unsentNotifications.map(notification => notification.location_name)
+        );
+        
         // Combine data to mark locations with notifications
-        const enhancedFavorites = favoritesResponse.favorites.map((fav: Location) => {
-          const hasNotification = notifications.some(
-            (notification: Notification) => 
-              notification?.location_name === fav.location_name && 
-              !notification.read
-          );
+        const enhancedFavorites = favoritesResponse.favorites.map((fav) => {
+          // Check if this location has notifications enabled (using the array)
+          const hasNotificationsEnabled = enabledLocationNames.includes(fav.location_name);
+          
+          // Check if this location has unsent notifications (using the Set)
+          const hasUnsentNotifications = locationsWithUnsentNotifications.has(fav.location_name);
           
           return {
             ...fav,
-            has_notification: hasNotification
+            has_notification: hasNotificationsEnabled,
+            has_unsent_notifications: hasUnsentNotifications
           };
         });
         
@@ -113,6 +133,9 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
 
   // Navigate to compare page with selected location
   const handleLocationSelect = (locationName: string) => {
+    // Mark any notifications as read
+    markNotificationsAsRead(locationName);
+
     navigate('/compare', {
       state: {
         locationToAdd: locationName,
@@ -165,6 +188,22 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
       notification => notification.location_name === locationName && !notification.read
     ).length;
   };
+
+  // Mark notifications as read for a location
+  const markNotificationsAsRead = async (locationName: string) => {
+    if (!userId) return;
+    
+    // Update local state first for immediate UI feedback
+    setNotifications(notifications.map(notification => 
+      notification.location_name === locationName 
+        ? { ...notification, read: true }
+        : notification
+    ));
+    
+    // In a real application, you would want to call an API endpoint to mark these notifications as read
+    // await api.markNotificationsAsRead(userId, locationName);
+  };
+
 
   // Helper to render location stats
   const renderLocationStats = (location: Location) => {
@@ -228,8 +267,15 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
                   <div 
                     key={location.location_name}
                     onClick={() => handleLocationSelect(location.location_name)}
-                    className="relative flex items-center bg-white/60 hover:bg-white/80 p-4 rounded-xl 
-                      shadow-sm border border-white/30 transition-all cursor-pointer"
+                    className={`relative flex items-center ${
+                      location.has_unsent_notifications 
+                        ? 'bg-blue-50/80 hover:bg-blue-50/90' 
+                        : 'bg-white/60 hover:bg-white/80'
+                    } p-4 rounded-xl shadow-sm border ${
+                      location.has_unsent_notifications 
+                        ? 'border-blue-200' 
+                        : 'border-white/30'
+                    } transition-all cursor-pointer`}
                   >
                     {/* Location information */}
                     <div className="flex-1">
@@ -237,9 +283,9 @@ const FavoritesPage: React.FC<FavoritesPageProps> = () => {
                         <h3 className="font-semibold text-gray-900">{location.location_name}</h3>
                         
                         {/* Notification indicator */}
-                        {hasNotifications && (
+                        {location.has_unsent_notifications && (
                           <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-600 rounded-full">
-                            {notificationCount} new
+                            {getNotificationCount(location.location_name)} new
                           </span>
                         )}
                       </div>

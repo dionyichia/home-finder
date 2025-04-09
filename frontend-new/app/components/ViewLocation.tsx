@@ -73,7 +73,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
   const [processedData, setProcessedData] = useState<any>(null);
   const [showWarning, setShowWarning] = useState(false);
   const { locationName: paramName } = useParams();
-  const locationName = propName || paramName;
+  var locationName = propName || paramName;
   const firstRender = useRef(true);
 
   useEffect(() => {
@@ -214,6 +214,7 @@ const ViewLocation = ({ locationName: propName }: { locationName?: string }) => 
         // Fetch location data
         const data = await api.searchLocation(locationName);
         console.log("pulled loc data from backend: ", data);
+        locationName = data.location_name
         
         // Process and set location data
         const processed = processLocationData(data);

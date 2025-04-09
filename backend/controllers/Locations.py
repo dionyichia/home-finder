@@ -32,7 +32,6 @@ class LocationsController:
         # Save location resale_prices
         fetch_resale.save_resale_price_to_db(db_path=db_path)
 
-
     @staticmethod
     def get_locations(db_name='app.db'):
         """

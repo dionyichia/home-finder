@@ -87,7 +87,20 @@ def create_database():
         flat_type TEXT,
         block TEXT,
         street_name TEXT,
-        resale_price REAL,
+        resale_price REAL
+    )
+    ''')
+    
+    # New
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS notification_logs (
+        notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL CHECK (type IN ('price', 'crime', 'schools', 'malls', 'transport')),
+        location_name TEXT NOT NULL,
+        message TEXT NOT NULL,
+        sent BOOLEAN DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (location_name) REFERENCES locations (location_name)
     )
     ''')
 
@@ -112,14 +125,14 @@ def reset_users_table():
 
 
 if __name__ == "__main__":
-    # create_database()
-
     # Database connection
     conn = sqlite3.connect("app.db")  # Single database file
     cursor = conn.cursor()
 
-    reset_preferences_table()
-    reset_users_table()
+    create_database()
+    
+    # reset_preferences_table()
+    # reset_users_table()
 
     # Close connection
     conn.close()

@@ -512,6 +512,36 @@ def get_all_themes(access_token):
             writer.writerow([theme])  # Write each theme as a row
 
     print(f"Saved {len(themes)} themes to {file_path}")
+
+@staticmethod
+def get_location(location_name: str) -> dict:
+    """
+    Get a location by name with support for partial matching
+    
+    Args:
+        location_name: Full or partial location name
+    
+    Returns:
+        Dict containing location details or error message
+    """
+    # Get all valid location names from your planning areas
+    all_locations = list(npc_to_district.keys())
+    
+    # First try exact match
+    location = db.execute_query("SELECT * FROM locations WHERE name = %s", (location_name,))
+    
+    if not location:
+        # Try to find the best match using our matching function
+        matched_location = get_best_location_match(location_name, all_locations)
+        
+        if matched_location:
+            # If we found a match, query again with the full name
+            location = db.execute_query("SELECT * FROM locations WHERE name = %s", (matched_location,))
+            
+            # You might want to log that a partial match was used
+            print(f"Partial match: '{location_name}' → '{matched_location}'")
+        
+    return location[0] if location else {"error": f"Location '{location_name}' not found"}
     
 # For testing
 if __name__ == "__main__":

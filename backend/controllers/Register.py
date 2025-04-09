@@ -29,14 +29,3 @@ class RegisterController:
         except Exception as e:
             print(f"Error occurred: {e}")
             return None
-        
-    def check_if_user_does_not_exist(username: str, email: str):
-        """
-        Return: True if user is not found
-        """
-
-        return True
-
-    def verify_user(username: str, email: str, password: str):
-        pass
-    

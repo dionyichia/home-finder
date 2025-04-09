@@ -69,6 +69,15 @@ export interface UserProfile {
   notifications_count: number;
 }
 
+interface Notification {
+  notification_id: number;
+  type: string;
+  location_name: string;
+  message: string;
+  created_at: string;
+  read?: boolean; // Optional since backend doesn't return this yet
+}
+
 export const api = {
   /**
    * Get all locations geodata
@@ -342,7 +351,7 @@ export const api = {
   /**
    * Get user notifications
    */
-  getUserNotifications: async (userId: string): Promise<{ notifications: any[] }> => {
+  getUserNotificationsEnabledLocation: async (userId: string): Promise<{ notifications: any[] }> => {
     const response = await fetch(`${API_BASE_URL}/get_user_notifications?user_id=${userId}`);
     
     if (!response.ok) {
@@ -356,21 +365,12 @@ export const api = {
   /**
    * Send notifications for a location
    */
-  sendNotifications: async (locationName: string, notificationType: string): Promise<{ message: string, notified_users: number }> => {
-    const response = await fetch(`${API_BASE_URL}/send_notifications`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        location_name: locationName,
-        notification_type: notificationType,
-      }),
-    });
+  getUserNotifications: async (userId: string): Promise<{ message: string,}> => {
+    const response = await fetch(`${API_BASE_URL}/get_unsent_notifications?user_id=${userId}`);
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || `Failed to send notifications: ${response.statusText}`);
+      throw new Error(errorData.message || `Failed to get notifications: ${response.statusText}`);
     }
     
     return response.json();

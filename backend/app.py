@@ -58,9 +58,26 @@ def search_for_location():
     if not location_name:
         return jsonify({"message": "Missing location name!"}), 400
     
-    print("Searching for:", location_name.strip())
-
-    return jsonify(LocationDetails.LocationsDetailController.get_location_details(location_name=location_name.strip()))
+    location_name = location_name.strip()
+    print("Searching for:", location_name)
+    
+    # Get all valid location names
+    all_locations = list(npc_to_district.keys())
+    
+    # Try to find a match
+    matched_location = LocationDetails.LocationsDetailController.get_best_location_match(location_name, all_locations)
+    
+    if not matched_location:
+        return jsonify({"message": f"No matching location found for '{location_name}'"}), 404
+    
+    # If we found a match but it's different from the original query, you might want to inform the user
+    if matched_location.lower() != location_name.lower():
+        result = LocationDetails.LocationsDetailController.get_location_details(location_name=matched_location)
+        result['matched_from'] = location_name  # Add the original query for reference
+        return jsonify(result)
+    
+    # If exact match, proceed normally
+    return jsonify(LocationDetails.LocationsDetailController.get_location_details(location_name=matched_location))
 
 # Register Route
 @app.route('/register', methods=['POST'])
@@ -287,6 +304,7 @@ def disable_notification():
     else:
         return jsonify({"message": "Failed to disable notifications!"}), 400
 
+#  This get all the locations which the user has notifications enabled
 @app.route('/get_user_notifications', methods=['GET'])
 def get_user_notifications():
     user_id = request.args.get('user_id')
@@ -302,21 +320,113 @@ def get_user_notifications():
     else:
         return jsonify({"message": "No enabled notifications found!"}), 200
 
-@app.route('/send_notifications', methods=['POST'])
-def send_notifications():
-    data = request.get_json()
-    location_name = data['location_name']
-    notification_type = data['notification_type']
+@app.route('/get_unsent_notifications', methods=['GET'])
+def get_unsent_notifications():
+    """Get all notifications that haven't been sent to the user yet to notify
+
+    Return dict with status, count and notifications.
+    notifications dict: {
+        'notification_id': notification['notification_id'],
+        'type': notification['type'],
+        'location_name': notification['location_name'],
+        'message': notification['message'],
+        'created_at': notification['created_at']
+    }
+    """
+    user_id = request.args.get('user_id')
+    print(user_id)
+    if not user_id:
+        return jsonify({"message": "User ID is required!"}), 400
     
-    notified_users = Notifications.NotificationsController.send_notification(location_name, notification_type)
+    unsent_notifications = Notifications.NotificationsController.get_unsent_notifications(user_id=user_id)
     
-    if notified_users:
+    if unsent_notifications:
         return jsonify({
-            "message": f"Notifications sent for {location_name}",
-            "notified_users": len(notified_users)
+            "status": "success",
+            "count": len(unsent_notifications),
+            "notifications": unsent_notifications
         }), 200
     else:
-        return jsonify({"message": "No users to notify or error occurred!"}), 404
+        return jsonify({
+            "status": "success", 
+            "count": 0, 
+            "message": "No unsent notifications found!"
+        }), 200
+    
+# Ignore this i shifted it here to resolve circular import error
+npc_to_district = {
+    "Ang Mo Kio": "Ang Mo Kio South NPC",
+    "Bedok": "Bedok NPC",
+    "Bishan": "Bishan NPC",
+    "Boon Lay": "Jurong West NPC",
+    "Bukit Batok": "Bukit Batok NPC",
+    "Bukit Merah": "Bukit Merah West NPC",
+    "Bukit Panjang": "Bukit Panjang NPC",
+    "Bukit Timah": "Bukit Timah NPC",
+    "Central Water Catchment": "Woodlands West NPC",
+    "Changi": "Changi NPC",
+    "Changi Bay": "Changi NPC",  # Added
+    "Choa Chu Kang": "Choa Chu Kang NPC",
+    "Clementi": "Clementi NPC",
+    "Downtown Core": "Marina Bay NPC",
+    "Geylang": "Geylang NPC",
+    "Hougang": "Hougang NPC",
+    "Jurong East": "Jurong East NPC",
+    "Jurong West": "Jurong West NPC",
+    "Kallang": "Kampong Java NPC",
+    "Lim Chu Kang": "Nanyang NPC",
+    "Mandai": "Woodlands East NPC",
+    "Marine Parade": "Marine Parade NPC",
+    "Marina East": "Marina Bay NPC",  # Added
+    "Marina South": "Marina Bay NPC",  # Added
+    "Museum": "Rochor NPC",
+    "Newton": "Orchard NPC",
+    "Novena": "Toa Payoh NPC",
+    "Orchard": "Orchard NPC",
+    "Outram": "Bukit Merah East NPC",
+    "Pasir Ris": "Pasir Ris NPC",
+    "Paya Lebar": "Hougang NPC",
+    "Pioneer": "Nanyang NPC",
+    "Punggol": "Punggol NPC",
+    "Queenstown": "Queenstown NPC",
+    "River Valley": "Orchard NPC",
+    "Rochor": "Rochor NPC",
+    "Seletar": "Sengkang NPC",
+    "Sembawang": "Sembawang NPC",
+    "Sengkang": "Sengkang NPC",
+    "Serangoon": "Serangoon NPC",
+    "Simpang": "Yishun North NPC",
+    "Singapore River": "Marina Bay NPC",
+    "Southern Islands": "Marina Bay NPC",
+    "Straits View": "Marina Bay NPC",  # Added
+    "Sungei Kadut": "Woodlands West NPC",
+    "Tampines": "Tampines NPC",
+    "Tanglin": "Bukit Timah NPC",
+    "Tengah": "Choa Chu Kang NPC",
+    "Toa Payoh": "Toa Payoh NPC",
+    "Tuas": "Nanyang NPC",
+    "Western Islands": "Nanyang NPC",
+    "Western Water Catchment": "Nanyang NPC",
+    "Woodlands": "Woodlands West NPC",
+    "Yishun": "Yishun South NPC",
+    "North-Eastern Islands": "Pasir Ris NPC"
+}
+
+# @app.route('/send_notifications', methods=['POST'])
+# def send_notifications():
+#     data = request.get_json()
+#     location_name = data['location_name']
+#     notification_type = data['notification_type']
+    
+#     notified_users = Notifications.NotificationsController.send_notification(location_name, notification_type)
+    
+#     if notified_users:
+#         return jsonify({
+#             "message": f"Notifications sent for {location_name}",
+#             "notified_users": len(notified_users)
+#         }), 200
+#     else:
+#         return jsonify({"message": "No users to notify or error occurred!"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

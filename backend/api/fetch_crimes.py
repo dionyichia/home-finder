@@ -6,6 +6,8 @@ import json
 import pathlib
 
 from .fetch_districts import DB_PATH, npc_to_district, CACHE_DIR
+# from ..controllers import Notifications
+from controllers import Notifications
 
 # Constants
 DATASET_ID = "d_ca0b908cf06a267ca06acbd5feb4465c"
@@ -26,20 +28,68 @@ def load_crime_data_from_cache(file=CACHE_CRIME_DATA_FILE):
 
 def fetch_crime_data_from_api():
     """
-    Fetch crime data from the API and save it to a CSV file.
+    Fetch crime data from the API, save it to a CSV file, and log new crimes to notifications.
+    
+    Returns:
+        tuple: (records, new_notifications) - All records and list of new notification IDs
     """
     response = requests.get(API_URL)
     if response.status_code == 200:
         data = response.json()
         records = data.get("result", {}).get("records", [])
         
-        # Save data to CSV
+        # Check for new crime data by comparing with cache
+        new_crimes = []
+        existing_crimes = []
+        
+        # Load existing cache if it exists
+        if os.path.exists(CACHE_CRIME_DATA_FILE):
+            with open(CACHE_CRIME_DATA_FILE, mode="r", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                existing_crimes = list(reader)
+        
+        # Find new crimes (not in the existing cache)
+        existing_identifiers = set()
+        for crime in existing_crimes:
+            # Create a unique identifier for each crime using date, location and type
+            identifier = f"{crime.get('Date')}-{crime.get('Planning Area')}-{crime.get('Type of Crime')}"
+            existing_identifiers.add(identifier)
+        
+        # Check each new record against the existing ones
+        for record in records:
+            identifier = f"{record.get('Date')}-{record.get('Planning Area')}-{record.get('Type of Crime')}"
+            if identifier not in existing_identifiers:
+                new_crimes.append(record)
+        
+        # Save all data to CSV
         os.makedirs(CACHE_DIR, exist_ok=True)
         with open(CACHE_CRIME_DATA_FILE, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=records[0].keys())
             writer.writeheader()
             writer.writerows(records)
-        return records
+        
+        # Log new crimes to notifications
+        new_notifications = []
+        for crime in new_crimes:
+            location = crime.get('Planning Area', 'Unknown')
+            crime_type = crime.get('Type of Crime', 'Unknown')
+            date = crime.get('Date', 'Unknown date')
+            summary = crime.get('Summary', 'No details available')
+            
+            # Create notification message
+            message = f"New crime reported: {crime_type} in {location} on {date}. {summary}"
+            
+            # Log notification
+            notification_id = Notifications.NotificationsController.create_notification_log(
+                location_name=location,
+                notification_type='crime',
+                message=message
+            )
+            
+            if notification_id != -1:
+                new_notifications.append(notification_id)
+        
+        return records, new_notifications
     else:
         raise Exception(f"Failed to fetch data from API. Status code: {response.status_code}")
     
@@ -336,6 +386,32 @@ def save_crimes_to_db(db_path=DB_PATH):
         import traceback
         traceback.print_exc()
         return False
+    
+# Comment out all code above to insert
+from datetime import datetime
+def create_dummy_notification_log():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    dummy_log = {
+        "type": "crime",
+        "location_name": "Bishan",
+        "message": "Test alert: Dummy crime reported in Bishan on 2025-04-09.",
+        "sent": False,
+        "created_at": datetime.now().isoformat()
+    }
+
+    cursor.execute('''
+        INSERT INTO notification_logs (type, location_name, message, sent, created_at)
+        VALUES (:type, :location_name, :message, :sent, :created_at)
+    ''', dummy_log)
+
+    conn.commit()
+    inserted_id = cursor.lastrowid
+    conn.close()
+    
+    print(f"Dummy notification log created with ID: {inserted_id}")
+
 
 if __name__ == "__main__":
     # Uncomment the function you want to run
@@ -343,4 +419,6 @@ if __name__ == "__main__":
     # Fetch and save data from API
     # save_to_csv()
     # save_crime_rate_to_db()
-    save_crimes_to_db()
+    # fetch_crime_data_from_api()
+    # save_crimes_to_db()
+    create_dummy_notification_log()

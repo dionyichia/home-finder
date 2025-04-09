@@ -107,53 +107,136 @@ class NotificationsController:
             return False
         finally:
             conn.close()
-    
+
     @staticmethod
-    def send_notification(location_name: str, notification_type: str, db_name='app.db') -> List[str]:
+    def create_notification_log(location_name: str, notification_type: str, message: str, db_name='app.db') -> int:
         """
-        Send notifications to all users who have enabled notifications for the location.
+        Create a new notification log entry.
         
         Args:
             location_name: The name of the location
             notification_type: The type of notification (price, crime, schools, malls, transport)
+            message: The notification message
             db_name: Name of the database file
             
         Returns:
-            List of user IDs who were notified
+            ID of the created notification log or -1 if failed
         """
         # Validate notification type
         valid_types = ['price', 'crime', 'schools', 'malls', 'transport']
         if notification_type not in valid_types:
             print(f"Invalid notification type: {notification_type}. Must be one of {valid_types}")
-            return []
+            return -1
         
         db_path = NotificationsController.get_db_path(db_name)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
         try:
-            # Get all users who have enabled notifications for this location
             cursor.execute('''
-                SELECT user_id FROM notifications
-                WHERE location_name = ? AND status = 'enabled'
-            ''', (location_name,))
+                INSERT INTO notification_logs (type, location_name, message, sent)
+                VALUES (?, ?, ?, 0)
+            ''', (notification_type, location_name, message))
             
-            user_ids = [row[0] for row in cursor.fetchall()]
-            
-            # In a real application, this would connect to a notification service
-            # Here we just return the list of users who would be notified
-            print(f"Sending {notification_type} update for {location_name} to {len(user_ids)} users")
-            
-            # Record the notification in a notifications history table if you have one
-            # This is optional but useful for tracking
-            
-            return user_ids
+            notification_id = cursor.lastrowid
+            conn.commit()
+            return notification_id
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            print(f"Database error when creating notification log: {e}")
+            conn.rollback()
+            return -1
+        finally:
+            conn.close()
+
+    @staticmethod
+    def process_notifications():
+        """Process all unsent notifications and send them to users"""
+        notifications_sent = 0
+        unsent_notifications = NotificationsController.get_unsent_notifications()
+        
+        print(f"Found {len(unsent_notifications)} unsent notifications")
+        
+        for notification in unsent_notifications:
+            print(f"Processing notification: {notification['notification_id']} - {notification['message']}")
+            notified_users = NotificationsController.send_notification(
+                notification['location_name'], 
+                notification['type']
+            )
+            
+            if notified_users:
+                print(f"Sent notification to {len(notified_users)} users")
+                notifications_sent += 1
+            else:
+                print("No users to notify")
+        
+        print(f"Processed {notifications_sent}/{len(unsent_notifications)} notifications")
+        return notifications_sent
+        
+    @staticmethod
+    def get_unsent_notifications(user_id: int, db_name='app.db') -> List[dict]:
+        """
+        Find all unsent notifications for a specific user who has enabled notifications
+        for those locations.
+        
+        Args:
+            user_id: ID of the user to get notifications for
+            db_name: Name of the database file
+            
+        Returns:
+            List of dictionaries containing notification details
+        """
+        db_path = NotificationsController.get_db_path(db_name)
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row  # This allows accessing columns by name
+        cursor = conn.cursor()
+        
+        unsent_notifications = []
+        
+        try:
+            # Get locations where this user has enabled notifications
+            cursor.execute('''
+                SELECT location_name FROM notifications
+                WHERE user_id = ? AND status = 'enabled'
+            ''', (user_id,))
+            
+            enabled_locations = [row['location_name'] for row in cursor.fetchall()]
+            
+            if not enabled_locations:
+                return []  # User hasn't enabled notifications for any locations
+            
+            # Get all unsent notifications for locations this user cares about
+            placeholder = ','.join(['?'] * len(enabled_locations))
+            query = f'''
+                SELECT notification_id, type, location_name, message, created_at
+                FROM notification_logs
+                WHERE sent = 0 AND location_name IN ({placeholder})
+                ORDER BY created_at DESC
+            '''
+            
+            cursor.execute(query, enabled_locations)
+            notifications = cursor.fetchall()
+            
+            # Format each notification for the response
+            for notification in notifications:
+                unsent_notifications.append({
+                    'notification_id': notification['notification_id'],
+                    'type': notification['type'],
+                    'location_name': notification['location_name'],
+                    'message': notification['message'],
+                    'created_at': notification['created_at']
+                })
+                
+                # Optionally mark as sent for this user
+                # If you want to track which users have seen which notifications,
+                # you would need an additional table for that purpose
+                
+            return unsent_notifications
+        except sqlite3.Error as e:
+            print(f"Database error when getting unsent notifications for user {user_id}: {e}")
             return []
         finally:
             conn.close()
-    
+
     @staticmethod
     def get_user_notifications(user_id: str, db_name='app.db') -> List[Dict[str, Any]]:
         """
