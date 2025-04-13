@@ -2,7 +2,7 @@
 
 ## Your Interactive Guide to Singapore's Ideal Neighborhoods
 
-![HomeFinder Logo](https://via.placeholder.com/150)
+![HomeFinder Logo](./assets/hf-high-resolution-logo.png)
 
 HomeFinder is a comprehensive web application designed to help prospective homebuyers in Singapore find their ideal neighborhood based on personalized preferences and real-time data. By centralizing crucial livability metrics and enabling side-by-side district comparisons, HomeFinder streamlines the home-hunting process that traditional property platforms have left fragmented.
 
@@ -38,9 +38,9 @@ HomeFinder is a comprehensive web application designed to help prospective homeb
 
 ## Demo
 
-[Live Demo](https://homefinder-app.example.com)
+[Live Demo](https://youtu.be/L-36j67G9AU)
 
-![HomeFinder Screenshot](https://via.placeholder.com/800x400)
+![HomeFinder Screenshot](./assets/explore_page.png)
 
 ## Tech Stack
 
@@ -58,6 +58,7 @@ HomeFinder is a comprehensive web application designed to help prospective homeb
 
 ### Integrations
 - data.gov.sg APIs (HDB resale prices, crime statistics, amenities data)
+- OneMap Api for real-time data on geolocation of neighbourhoods, school, malls and tranportation
 - Mapbox API for interactive mapping
 
 ## Getting Started
@@ -116,23 +117,41 @@ npm run dev
 ## Usage
 
 1. **Create an account** or log in to save your preferences
+
+![img](./assets/sign_up.png)
+
 2. **Set your priorities** by ranking importance of:
    - Resale price
    - Crime rate
    - Proximity to schools
    - Shopping accessibility
    - Public transport connectivity
-3. **Explore the interactive map** using various filters
+
+   ![Register Perferences when creating your Profile](./assets/register_preferences.png)
+
+3. **Explore the interactive map** using various filters by clicking on the categories shown on the top right hand corner in the explore page
+
+![img](./assets/explore_page.png)
+
+
 4. **Compare districts** side-by-side for detailed analysis
+
+![img](./assets/compare_page.png)
+
 5. **Save favorite districts** for future reference
+
+![img](./assets/favourites_page.png)
+
 6. **Enable notifications** to stay updated on changes in your preferred areas
 
-## API Integrations
+## API Integrations and Data Sources
 
 HomeFinder leverages several data sources to provide comprehensive information:
 
-- **data.gov.sg**: Real-time data on HDB resale prices, crime statistics, and amenities
+- **data.gov.sg**: Data on HDB resale prices, crime statistics, and amenities
+- **Onemap**: Real-time data on geolocation of neighbourhoods, school, malls and tranportation
 - **Mapbox**: Interactive district visualization and geospatial rendering
+- **Singapore Department of Statistics**: Data on past crimes, crime rate for different neighbourhoods and NPCs
 
 ## Assumptions
 
