@@ -49,7 +49,7 @@ dist/
 
 # Specifically remove this cache file to avoid large file warning
 # */backend/api_cache/
-**/hdb_resale_prices.csvgit rm --cached path/to/file
+**/hdb_resale_prices.csv
 
 # Ignore testing folder
 tagging_planning_area

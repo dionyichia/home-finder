@@ -369,6 +369,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Project Link: [https://github.com/yourusername/homefinder](https://github.com/yourusername/homefinder)
+Project Link: [https://github.com/dionyichia/home-finder](https://github.com/dionyichia/home-finder)
 
-Team Email: team@homefinder.example.com
+Email: dionyichia@gmail.com
