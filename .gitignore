@@ -37,5 +37,14 @@ dist/
 .env
 *.env
 
+# Ignore node modules
+*/.DS_Store
+*/node_modules/
+
+# React Router
+*.react-router/
+*/build/
+
+
 # Ignore testing folder
 tagging_planning_area

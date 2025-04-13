@@ -1,12 +1,144 @@
-# Home Finder App
-### An app to find your ideal neighbourhood to buy that dream BTO!!
+# HomeFinder App
 
+## Your Interactive Guide to Singapore's Ideal Neighborhoods
 
+![HomeFinder Logo](https://via.placeholder.com/150)
 
-### Assumptions:
+HomeFinder is a comprehensive web application designed to help prospective homebuyers in Singapore find their ideal neighborhood based on personalized preferences and real-time data. By centralizing crucial livability metrics and enabling side-by-side district comparisons, HomeFinder streamlines the home-hunting process that traditional property platforms have left fragmented.
 
-#### Crime Rate
-Below is our mapping of Singapore's Neighbourhood Police Centres (NPCs) to the 55 URA planning areas, ensuring that each planning area is assigned to the most relevant or closest NPC while allowing NPCs to cover multiple planning areas. 
+## Table of Contents
+
+- [Features](#features)
+- [Demo](#demo)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [API Integrations](#api-integrations)
+- [Assumptions](#assumptions)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+## Features
+
+- **Interactive District Map**: Visualize all 55 Singapore districts with customizable filters
+- **Comprehensive Data Analysis**: Access real-time metrics on:
+  - HDB resale prices
+  - Crime rates
+  - Proximity to schools
+  - Shopping mall accessibility
+  - Public transport availability (MRTs)
+- **Side-by-Side Comparison**: Evaluate two districts simultaneously with detailed metrics
+- **Personalized Recommendations**: Get "For You" suggestions based on your preferences
+- **User Profiles**: Create an account to save preferences and favorite districts
+- **Notification System**: Receive alerts when important metrics change in your favorite districts
+
+## Demo
+
+[Live Demo](https://homefinder-app.example.com)
+
+![HomeFinder Screenshot](https://via.placeholder.com/800x400)
+
+## Tech Stack
+
+### Frontend
+- React with TypeScript
+- Tailwind CSS for styling
+- React Router v7 for navigation
+- Vite for development and building
+- Mapbox GL JS for geospatial rendering
+
+### Backend
+- Flask Python framework
+- SQLite database
+- RESTful API architecture
+
+### Integrations
+- data.gov.sg APIs (HDB resale prices, crime statistics, amenities data)
+- Mapbox API for interactive mapping
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- Python (v3.8 or higher)
+- npm or yarn
+- pip
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/homefinder.git
+cd homefinder
+```
+
+2. Set up the frontend
+```bash
+cd frontend
+npm install
+```
+
+3. Set up the backend
+```bash
+cd ../backend
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+pip install -r requirements.txt
+```
+
+4. Configure environment variables
+```bash
+# In the frontend directory
+cp .env.example .env
+# Edit .env with your Mapbox API key and backend URL
+
+# In the backend directory
+cp .env.example .env
+# Edit .env with your database connection and API keys
+```
+
+5. Start the development servers
+```bash
+# Start backend (from backend directory)
+flask run
+
+# Start frontend (from frontend directory)
+npm run dev
+```
+
+6. Access the application at `http://localhost:5173`
+
+## Usage
+
+1. **Create an account** or log in to save your preferences
+2. **Set your priorities** by ranking importance of:
+   - Resale price
+   - Crime rate
+   - Proximity to schools
+   - Shopping accessibility
+   - Public transport connectivity
+3. **Explore the interactive map** using various filters
+4. **Compare districts** side-by-side for detailed analysis
+5. **Save favorite districts** for future reference
+6. **Enable notifications** to stay updated on changes in your preferred areas
+
+## API Integrations
+
+HomeFinder leverages several data sources to provide comprehensive information:
+
+- **data.gov.sg**: Real-time data on HDB resale prices, crime statistics, and amenities
+- **Mapbox**: Interactive district visualization and geospatial rendering
+
+## Assumptions
+
+### Crime Rate Mapping
+
+We've mapped Singapore's Neighbourhood Police Centres (NPCs) to the 55 URA planning areas to provide meaningful crime rate data. Each planning area is assigned to the most relevant or closest NPC, with some NPCs covering multiple planning areas.
 
 | **Planning Area**       | **Mapped NPC**       |
 | ----------------------- | -------------------- |
@@ -134,3 +266,109 @@ Planning Areas without HDB Flats:
 - Tuas: An industrial zone with no residential housing.
 - Western Islands: Comprises offshore islands with no residential developments.
 - Western Water Catchment: Contains water catchment areas; no residential housing.
+
+### Other Assumptions
+- **Public Transport**: Focuses on MRT stations (bus stops not included in current version)
+
+## Project Structure
+
+```
+homefinder/
+├── README.md
+├── backend
+│   ├── api
+│   │   ├── fetch_crimes.py
+│   │   ├── fetch_districts.py
+│   │   ├── fetch_malls.py
+│   │   ├── fetch_resale.py
+│   │   ├── fetch_schools.py
+│   │   └── fetch_transport.py
+│   ├── api_cache
+│   │   ├── crimes.csv
+│   │   ├── crimes_by_npc.csv
+│   │   ├── hdb_resale_prices.csv
+│   │   ├── locations_coordinates.csv
+│   │   ├── malls_coordinates.csv
+│   │   ├── mrt_coordinates.csv
+│   │   ├── population_size.csv
+│   │   ├── schools_coordinates.csv
+│   │   └── top5_crimes_by_npc.csv
+│   ├── app.db
+│   ├── app.py
+│   ├── controllers
+│   │   ├── Favorites.py
+│   │   ├── LocationDetails.py
+│   │   ├── Locations.py
+│   │   ├── Notifications.py
+│   │   ├── Preferences.py
+│   │   ├── Register.py
+│   │   ├── Scoring.py
+│   │   ├── User.py
+│   ├── table_models.py
+│   └── test_app.py
+├── frontend-new
+│   ├── app
+│   │   ├── api.tsx
+│   │   ├── app.css
+│   │   ├── components
+│   │   │   ├── FanChart.tsx
+│   │   │   ├── LocationDetailSidebar.tsx
+│   │   │   ├── NavBar.tsx
+│   │   │   ├── ViewLocation.tsx
+│   │   │   ├── map
+│   │   │   │   ├── CategorySelector.tsx
+│   │   │   │   ├── LocationBubble.tsx
+│   │   │   │   └── MapPolygonOverlay.tsx
+│   │   │   ├── profile
+│   │   │   │   ├── SignInForm.tsx
+│   │   │   │   ├── SignUpForm.tsx
+│   │   │   │   └── UserProfile.tsx
+│   │   │   ├── sidebar
+│   │   │   │   ├── SearchBar.tsx
+│   │   │   │   ├── SideBar.tsx
+│   │   │   │   └── SummarisedLocation.tsx
+│   │   │   └── view_location
+│   │   │       └── CrimeCard.tsx
+│   │   ├── contexts
+│   │   │   └── MapContext.tsx
+│   │   ├── hooks
+│   │   │   ├── useLocationBubbles.tsx
+│   │   │   ├── useRefocusMap.tsx
+│   │   │   └── useSideBar.tsx
+│   │   ├── root.tsx
+│   │   ├── routes
+│   │   │   ├── compare.tsx
+│   │   │   ├── explore.tsx
+│   │   │   ├── favourites.tsx
+│   │   │   └── profile.tsx
+│   │   └── routes.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── favicon.ico
+│   ├── react-router.config.ts
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── homefinder-readme.md
+├── my_tree.txt
+└── requirements.txt
+
+## Contributing
+
+We welcome contributions to HomeFinder! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## Contact
+
+Project Link: [https://github.com/yourusername/homefinder](https://github.com/yourusername/homefinder)
+
+Team Email: team@homefinder.example.com
