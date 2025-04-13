@@ -27,6 +27,8 @@ venv/
 htmlcov/
 .cache/
 pytest_cache/
+*/__pycache__
+*.pytest_cache
 
 # Ignore build artifacts
 build/
@@ -45,6 +47,9 @@ dist/
 *.react-router/
 */build/
 
+# Specifically remove this cache file to avoid large file warning
+# */backend/api_cache/
+**/hdb_resale_prices.csvgit rm --cached path/to/file
 
 # Ignore testing folder
 tagging_planning_area
